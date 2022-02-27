@@ -30,6 +30,7 @@ func main() {
 	}
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		fmt.Println("Bot is ready")
+		fmt.Println(r.User.AvatarURL(""))
 
 	})
 
@@ -155,13 +156,28 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 
 	var discFiles []*discordgo.File
 	discFiles = append(discFiles, &discFile)
+
+	embed := &discordgo.MessageEmbed{
+		Title:       "Embed Title",
+		Description: "Embed Description",
+		Timestamp:   "2021-05-28",
+		Color:       0x78141b,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: "https://cdn.discordapp.com/avatars/947078484688269312/cbf37e205c0d4c13ec17927d4ae9bfa2.png",
+		},
+		Fields: []*discordgo.MessageEmbedField{
+			{
+				Name:   "Duration",
+				Value:  fmt.Sprintf("%f", t),
+				Inline: false,
+			},
+		},
+	}
 	_, err = s.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Content:         "uwu, duration of " + fmt.Sprintf("%f", t),
-		TTS:             false,
 		Files:           discFiles,
 		AllowedMentions: nil,
 		File:            nil,
-		Embed:           nil,
+		Embed:           embed,
 	})
 	if err != nil {
 		fmt.Println(err)
