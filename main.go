@@ -2,14 +2,18 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
+	"github.com/EdlinOrg/prominentcolor"
 	"github.com/bwmarrin/discordgo"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
 	"github.com/tcolgate/mp3"
+	"image"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"os/signal"
@@ -30,7 +34,14 @@ func main() {
 	}
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		fmt.Println("Bot is ready")
-		fmt.Println(r.User.AvatarURL(""))
+		url := r.User.AvatarURL("")
+		fmt.Println(url)
+		err := downloadFile(url, "uwu.png")
+		if err != nil {
+			log.Fatal(err)
+		}
+		fmt.Printf("File %s downlaod in current working directory", "uwu.png")
+		prominenColors()
 
 	})
 
@@ -91,6 +102,35 @@ func main() {
 	<-stop
 	log.Println("Graceful shutdown")
 
+}
+
+func prominenColors() {
+	// Step 1: Load the image
+	img, err := loadImage("uwu.png")
+	if err != nil {
+		log.Fatal("Failed to load image", err)
+	}
+
+	// Step 2: Process it
+	colours, err := prominentcolor.Kmeans(img)
+	if err != nil {
+		log.Fatal("Failed to process image", err)
+	}
+
+	fmt.Println("Dominant colours:")
+	for _, colour := range colours {
+		fmt.Println("#" + colour.AsString())
+	}
+}
+
+func loadImage(fileInput string) (image.Image, error) {
+	f, err := os.Open(fileInput)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	img, _, err := image.Decode(f)
+	return img, err
 }
 
 func recordAndSend(s *discordgo.Session, guildId string, channelId string, done chan bool) {
@@ -161,7 +201,7 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 		Title:       "Embed Title",
 		Description: "Embed Description",
 		Timestamp:   "2021-05-28",
-		Color:       0x78141b,
+		Color:       0xBFA0B0,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
 			URL: "https://cdn.discordapp.com/avatars/947078484688269312/cbf37e205c0d4c13ec17927d4ae9bfa2.png",
 		},
@@ -184,6 +224,33 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 		return
 	}
 
+}
+
+func downloadFile(URL, fileName string) error {
+	//Get the response bytes from the url
+	response, err := http.Get(URL)
+	if err != nil {
+		return err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != 200 {
+		return errors.New("Received non 200 response code")
+	}
+	//Create a empty file
+	file, err := os.Create(fileName)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	//Write the bytes to the fiel
+	_, err = io.Copy(file, response.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func getDuration(fileName string) float64 {
