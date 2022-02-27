@@ -7,6 +7,7 @@ import (
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
+	"github.com/tcolgate/mp3"
 	"io"
 	"log"
 	"os"
@@ -29,7 +30,6 @@ func main() {
 	}
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		fmt.Println("Bot is ready")
-		s.ava
 
 	})
 
@@ -133,29 +133,12 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 		return
 	}
 
+	t := getDuration("file.mp3")
+
 	file, err := os.Open("file.mp3")
 	if err != nil {
 		return
 	}
-
-	d := mp3.NewDecoder(r)
-	var f mp3.Frame
-	skipped := 0
-
-	for {
-
-		if err := d.Decode(&f, &skipped); err != nil {
-			if err == io.EOF {
-				break
-			}
-			fmt.Println(err)
-			return
-		}
-
-		t = t + f.Duration().Seconds()
-	}
-
-	fmt.Println(t)
 
 	reader := bufio.NewReader(file)
 	discFile := discordgo.File{
@@ -169,10 +152,11 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 			fmt.Println(err)
 		}
 	}(file)
+
 	var discFiles []*discordgo.File
 	discFiles = append(discFiles, &discFile)
 	_, err = s.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Content:         "uwu",
+		Content:         "uwu, duration of " + fmt.Sprintf("%f", t),
 		TTS:             false,
 		Files:           discFiles,
 		AllowedMentions: nil,
@@ -183,6 +167,40 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 		fmt.Println(err)
 		return
 	}
+
+}
+
+func getDuration(fileName string) float64 {
+	file1, err := os.Open(fileName)
+	if err != nil {
+		return 0
+	}
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println(err)
+		}
+	}(file1)
+
+	d := mp3.NewDecoder(file1)
+	var f mp3.Frame
+	skipped := 0
+
+	var t float64
+	for {
+
+		if err := d.Decode(&f, &skipped); err != nil {
+			if err == io.EOF {
+				break
+			}
+			fmt.Println(err)
+			return 0
+		}
+
+		t = t + f.Duration().Seconds()
+	}
+
+	return t
 
 }
 
