@@ -17,7 +17,11 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"strconv"
+	"time"
 )
+
+const baseFilePath = "./tmp"
 
 func main() {
 
@@ -34,14 +38,14 @@ func main() {
 	}
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		fmt.Println("Bot is ready")
-		url := r.User.AvatarURL("")
-		fmt.Println(url)
-		err := downloadFile(url, "uwu.png")
-		if err != nil {
-			log.Fatal(err)
+
+		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
+			err := os.Mkdir(baseFilePath, 0755)
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 		}
-		fmt.Printf("File %s downlaod in current working directory", "uwu.png")
-		prominenColors()
 
 	})
 
@@ -60,7 +64,6 @@ func main() {
 			return
 		}
 		if lockedUser == r.UserID {
-			fmt.Println("done recording")
 			done <- true
 			lockedUser = ""
 			return
@@ -77,10 +80,8 @@ func main() {
 
 		lockedUser = r.UserID
 		fmt.Println(r.ChannelID, r.UserID, user.Username)
-		recordAndSend(s, r.GuildID, r.ChannelID, done)
+		recordAndSend(s, r.GuildID, r.ChannelID, user, done)
 		lockedUser = ""
-		fmt.Println(lockedUser)
-
 	})
 
 	// We only really care about receiving voice state updates.
@@ -104,9 +105,9 @@ func main() {
 
 }
 
-func prominenColors() {
+func prominentColor(fileName string) int {
 	// Step 1: Load the image
-	img, err := loadImage("uwu.png")
+	img, err := loadImage(fmt.Sprintf("%s.png", fileName))
 	if err != nil {
 		log.Fatal("Failed to load image", err)
 	}
@@ -117,10 +118,11 @@ func prominenColors() {
 		log.Fatal("Failed to process image", err)
 	}
 
-	fmt.Println("Dominant colours:")
 	for _, colour := range colours {
-		fmt.Println("#" + colour.AsString())
+		value, _ := strconv.ParseInt(colour.AsString(), 16, 64)
+		return int(value)
 	}
+	return 0
 }
 
 func loadImage(fileInput string) (image.Image, error) {
@@ -133,7 +135,7 @@ func loadImage(fileInput string) (image.Image, error) {
 	return img, err
 }
 
-func recordAndSend(s *discordgo.Session, guildId string, channelId string, done chan bool) {
+func recordAndSend(s *discordgo.Session, guildId string, channelId string, user *discordgo.User, done chan bool) {
 	v, err := s.ChannelVoiceJoin(guildId, channelId, true, false)
 
 	if err != nil {
@@ -151,11 +153,11 @@ func recordAndSend(s *discordgo.Session, guildId string, channelId string, done 
 		}
 	}()
 
-	handleVoice(v.OpusRecv)
-	sendAudioFile(s, guildId)
+	fileNames := handleVoice(v.OpusRecv, user)
+	sendAudioFiles(s, guildId, fileNames, user)
 }
 
-func sendAudioFile(s *discordgo.Session, guildId string) {
+func sendAudioFiles(s *discordgo.Session, guildId string, fileNames []string, user *discordgo.User) {
 	channels, err := s.GuildChannels(guildId)
 	if err != nil {
 		return
@@ -174,16 +176,41 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 		return
 	}
 
-	t := getDuration("file.mp3")
+	for _, fileName := range fileNames {
+		sendAudioFile(s, chID, fileName, user)
+	}
 
-	file, err := os.Open("file.mp3")
+}
+
+func formatSeconds(inSeconds int) string {
+	minutes := inSeconds / 60
+	seconds := inSeconds % 60
+	str := fmt.Sprintf("%dm:%02ds", minutes, seconds)
+	return str
+}
+
+func getDominantAvatarColor(url string, fileName string) int {
+	err := downloadFile(url, fmt.Sprintf("%s.png", fileName))
 	if err != nil {
+		log.Fatal(err)
+	}
+	return prominentColor(fileName)
+
+}
+
+func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *discordgo.User) {
+	mp3FullName := fmt.Sprintf("%s", fileName) + ".mp3"
+	t := getDuration(mp3FullName)
+
+	file, err := os.Open(mp3FullName)
+	if err != nil {
+		fmt.Println(err)
 		return
 	}
 
 	reader := bufio.NewReader(file)
 	discFile := discordgo.File{
-		Name:        "file.mp3",
+		Name:        mp3FullName,
 		ContentType: "audio/mpeg",
 		Reader:      reader,
 	}
@@ -197,18 +224,22 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 	var discFiles []*discordgo.File
 	discFiles = append(discFiles, &discFile)
 
+	timeString := time.Now().Format("2006-01-02")
+	fmt.Println(timeString)
+	dominantColor := getDominantAvatarColor(user.AvatarURL(""), fileName)
+	fmt.Println("dominant", dominantColor)
+
 	embed := &discordgo.MessageEmbed{
-		Title:       "Embed Title",
-		Description: "Embed Description",
-		Timestamp:   "2021-05-28",
-		Color:       0xBFA0B0,
+		Title:     user.Username,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Color:     dominantColor,
 		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: "https://cdn.discordapp.com/avatars/947078484688269312/cbf37e205c0d4c13ec17927d4ae9bfa2.png",
+			URL: user.AvatarURL(""),
 		},
 		Fields: []*discordgo.MessageEmbedField{
 			{
 				Name:   "Duration",
-				Value:  fmt.Sprintf("%f", t),
+				Value:  formatSeconds(int(t)),
 				Inline: false,
 			},
 		},
@@ -223,7 +254,6 @@ func sendAudioFile(s *discordgo.Session, guildId string) {
 		fmt.Println(err)
 		return
 	}
-
 }
 
 func downloadFile(URL, fileName string) error {
@@ -287,41 +317,44 @@ func getDuration(fileName string) float64 {
 
 }
 
-func handleVoice(c chan *discordgo.Packet) {
-	files := make(map[uint32]media.Writer)
+func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
+	files := make(map[string]media.Writer)
 	for p := range c {
-		file, ok := files[p.SSRC]
+		name := user.Username + "-" + fmt.Sprintf("%d", p.SSRC)
+		file, ok := files[name]
 		if !ok {
 			var err error
-			file, err = oggwriter.New(fmt.Sprintf("%d.ogg", 1), 48000, 2)
+			file, err = oggwriter.New(fmt.Sprintf("%s.ogg", name), 48000, 2)
 			if err != nil {
 				fmt.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
-				return
+				return nil
 			}
-			files[p.SSRC] = file
+			files[name] = file
 		}
 		// Construct pion RTP packet from DiscordGo's type.
-		rtp := createPionRTPPacket(p)
-		err := file.WriteRTP(rtp)
+		rtpPacket := createPionRTPPacket(p)
+		err := file.WriteRTP(rtpPacket)
 		if err != nil {
 			fmt.Printf("failed to write to file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 		}
 	}
 
 	// Once we made it here, we're done listening for packets. Close all files
-	for _, f := range files {
+	var mp3Names []string
+	for fileName, f := range files {
 		err := f.Close()
 		if err != nil {
-			return
+			return nil
 		}
 
-		err = convertToMp3("1.ogg", "file.mp3")
+		err = convertToMp3(fmt.Sprintf("%s.ogg", fileName), fmt.Sprintf("%s.mp3", fileName))
 		if err != nil {
 			fmt.Println(err)
-			return
+			return nil
 		}
-
+		mp3Names = append(mp3Names, fileName)
 	}
+	return mp3Names
 
 }
 
