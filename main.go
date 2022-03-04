@@ -21,15 +21,23 @@ import (
 	"time"
 )
 
-const baseFilePath = "./tmp"
+func getBasePath() string {
+	var baseFilePath = os.Getenv("BASE_PATH")
+	if baseFilePath == "" {
+		baseFilePath = "./tmp"
+	}
+	return baseFilePath
+
+}
 
 func main() {
 
 	Token := os.Getenv("BOT_TOKEN")
 	if Token == "" {
 		fmt.Println("Please set token on BOT_TOKEN env")
+		return
 	}
-	ChannelName := "TATERUV2-TEST"
+	ChannelName := "TATERU"
 
 	s, err := discordgo.New("Bot " + Token)
 	if err != nil {
@@ -39,6 +47,7 @@ func main() {
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		fmt.Println("Bot is ready")
 
+		baseFilePath := getBasePath()
 		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
 			err := os.Mkdir(baseFilePath, 0755)
 			if err != nil {
@@ -209,6 +218,7 @@ func getDominantAvatarColor(url string, fileName string) int {
 }
 
 func resolveFullPath(fileName string) string {
+	baseFilePath := getBasePath()
 	return fmt.Sprintf("%s/%s", baseFilePath, fileName)
 }
 

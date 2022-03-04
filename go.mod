@@ -1,4 +1,4 @@
-module awesomeProject
+module taterubot
 
 go 1.18
 
