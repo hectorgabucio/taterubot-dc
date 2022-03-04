@@ -79,7 +79,6 @@ func main() {
 		}
 
 		lockedUser = r.UserID
-		fmt.Println(r.ChannelID, r.UserID, user.Username)
 		recordAndSend(s, r.GuildID, r.ChannelID, user, done)
 		lockedUser = ""
 	})
@@ -107,7 +106,7 @@ func main() {
 
 func prominentColor(fileName string) int {
 	// Step 1: Load the image
-	img, err := loadImage(fmt.Sprintf("%s.png", fileName))
+	img, err := loadImage(resolveFullPath(fmt.Sprintf("%s.png", fileName)))
 	if err != nil {
 		log.Fatal("Failed to load image", err)
 	}
@@ -154,7 +153,18 @@ func recordAndSend(s *discordgo.Session, guildId string, channelId string, user 
 	}()
 
 	fileNames := handleVoice(v.OpusRecv, user)
+	defer deleteFiles(fileNames)
 	sendAudioFiles(s, guildId, fileNames, user)
+
+}
+
+func deleteFiles(fileNames []string) {
+	for _, fileName := range fileNames {
+		_ = os.Remove(resolveFullPath(fmt.Sprintf("%s.png", fileName)))
+		_ = os.Remove(resolveFullPath(fmt.Sprintf("%s.ogg", fileName)))
+		_ = os.Remove(resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
+	}
+
 }
 
 func sendAudioFiles(s *discordgo.Session, guildId string, fileNames []string, user *discordgo.User) {
@@ -190,7 +200,7 @@ func formatSeconds(inSeconds int) string {
 }
 
 func getDominantAvatarColor(url string, fileName string) int {
-	err := downloadFile(url, fmt.Sprintf("%s.png", fileName))
+	err := downloadFile(url, resolveFullPath(fmt.Sprintf("%s.png", fileName)))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -198,8 +208,12 @@ func getDominantAvatarColor(url string, fileName string) int {
 
 }
 
+func resolveFullPath(fileName string) string {
+	return fmt.Sprintf("%s/%s", baseFilePath, fileName)
+}
+
 func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *discordgo.User) {
-	mp3FullName := fmt.Sprintf("%s", fileName) + ".mp3"
+	mp3FullName := resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
 	t := getDuration(mp3FullName)
 
 	file, err := os.Open(mp3FullName)
@@ -224,10 +238,7 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 	var discFiles []*discordgo.File
 	discFiles = append(discFiles, &discFile)
 
-	timeString := time.Now().Format("2006-01-02")
-	fmt.Println(timeString)
 	dominantColor := getDominantAvatarColor(user.AvatarURL(""), fileName)
-	fmt.Println("dominant", dominantColor)
 
 	embed := &discordgo.MessageEmbed{
 		Title:     user.Username,
@@ -245,10 +256,8 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 		},
 	}
 	_, err = s.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Files:           discFiles,
-		AllowedMentions: nil,
-		File:            nil,
-		Embed:           embed,
+		Embed: embed,
+		Files: discFiles,
 	})
 	if err != nil {
 		fmt.Println(err)
@@ -324,7 +333,7 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 		file, ok := files[name]
 		if !ok {
 			var err error
-			file, err = oggwriter.New(fmt.Sprintf("%s.ogg", name), 48000, 2)
+			file, err = oggwriter.New(resolveFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
 			if err != nil {
 				fmt.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 				return nil
@@ -347,7 +356,7 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 			return nil
 		}
 
-		err = convertToMp3(fmt.Sprintf("%s.ogg", fileName), fmt.Sprintf("%s.mp3", fileName))
+		err = convertToMp3(resolveFullPath(fmt.Sprintf("%s.ogg", fileName)), resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
 		if err != nil {
 			fmt.Println(err)
 			return nil
@@ -360,8 +369,6 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 
 func convertToMp3(input string, output string) error {
 	cmd := exec.Command("ffmpeg", "-y", "-i", input, output)
-
-	fmt.Println(cmd.String())
 
 	err := cmd.Run()
 
