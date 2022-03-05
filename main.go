@@ -50,7 +50,7 @@ func main() {
 
 		baseFilePath := getBasePath()
 		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
-			err := os.Mkdir(baseFilePath, 0755)
+			err := os.Mkdir(baseFilePath, 0750)
 			if err != nil {
 				fmt.Println(err)
 				return
@@ -139,7 +139,12 @@ func loadImage(fileInput string) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		err := f.Close()
+		if err != nil {
+			fmt.Println("err closing image file", err)
+		}
+	}(f)
 	img, _, err := image.Decode(f)
 	return img, err
 }
@@ -282,7 +287,12 @@ func downloadFile(URL, fileName string) error {
 	if err != nil {
 		return err
 	}
-	defer response.Body.Close()
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			fmt.Println("error closing http response body", err)
+		}
+	}(response.Body)
 
 	if response.StatusCode != 200 {
 		return errors.New("Received non 200 response code")
@@ -292,9 +302,14 @@ func downloadFile(URL, fileName string) error {
 	if err != nil {
 		return err
 	}
-	defer file.Close()
+	defer func(file *os.File) {
+		err := file.Close()
+		if err != nil {
+			fmt.Println("error closing file", err)
+		}
+	}(file)
 
-	//Write the bytes to the fiel
+	//Write the bytes to the field
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
 		return err
