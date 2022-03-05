@@ -1,1 +1,1 @@
-worker: bin/taterubot
+worker: bin/taterubot-dc
