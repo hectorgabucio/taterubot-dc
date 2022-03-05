@@ -17,6 +17,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -303,7 +304,7 @@ func downloadFile(URL, fileName string) error {
 }
 
 func getDuration(fileName string) float64 {
-	file1, err := os.Open(fileName)
+	file1, err := os.Open(filepath.Clean(fileName))
 	if err != nil {
 		return 0
 	}
