@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/bwmarrin/discordgo"
+	"github.com/kelseyhightower/envconfig"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
@@ -31,14 +32,20 @@ func getBasePath() string {
 
 }
 
+type config struct {
+	BotToken    string `default:"token" split_words:"true"`
+	ChannelName string `default:"TATERU" split_words:"true"`
+}
+
 func Run() error {
 
-	Token := os.Getenv("BOT_TOKEN")
-	if Token == "" {
+	var cfg config
+	err := envconfig.Process("", &cfg)
+	if err != nil {
+		return err
 	}
-	ChannelName := "TATERU"
 
-	s, err := discordgo.New("Bot " + Token)
+	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
 		return errors.New("Error initializing bot: " + err.Error())
 	}
@@ -81,7 +88,7 @@ func Run() error {
 			log.Println(err)
 			return
 		}
-		if channel.Name != ChannelName {
+		if channel.Name != cfg.ChannelName {
 			return
 		}
 

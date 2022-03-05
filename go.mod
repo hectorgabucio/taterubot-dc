@@ -6,6 +6,7 @@ go 1.17
 require (
 	github.com/EdlinOrg/prominentcolor v1.0.0
 	github.com/bwmarrin/discordgo v0.24.0
+	github.com/kelseyhightower/envconfig v1.4.0
 	github.com/pion/rtp v1.7.4
 	github.com/pion/webrtc/v3 v3.0.0-20200721060053-ca3cc9d940bc
 	github.com/tcolgate/mp3 v0.0.0-20170426193717-e79c5a46d300
