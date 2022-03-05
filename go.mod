@@ -1,6 +1,7 @@
 module github.com/hectorgabucio/taterubot-dc
 
-go 1.18
+// +heroku goVersion go1.17
+go 1.17
 
 require (
 	github.com/EdlinOrg/prominentcolor v1.0.0
