@@ -135,7 +135,7 @@ func prominentColor(fileName string) int {
 }
 
 func loadImage(fileInput string) (image.Image, error) {
-	f, err := os.Open(fileInput)
+	f, err := os.Open(filepath.Clean(fileInput))
 	if err != nil {
 		return nil, err
 	}
@@ -227,7 +227,7 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 	mp3FullName := resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
 	t := getDuration(mp3FullName)
 
-	file, err := os.Open(mp3FullName)
+	file, err := os.Open(filepath.Clean(mp3FullName))
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -288,7 +288,7 @@ func downloadFile(URL, fileName string) error {
 		return errors.New("Received non 200 response code")
 	}
 	//Create a empty file
-	file, err := os.Create(fileName)
+	file, err := os.Create(filepath.Clean(fileName))
 	if err != nil {
 		return err
 	}
