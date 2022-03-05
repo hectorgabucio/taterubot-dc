@@ -35,24 +35,24 @@ func main() {
 
 	Token := os.Getenv("BOT_TOKEN")
 	if Token == "" {
-		fmt.Println("Please set token on BOT_TOKEN env")
+		log.Println("Please set token on BOT_TOKEN env")
 		return
 	}
 	ChannelName := "TATERU"
 
 	s, err := discordgo.New("Bot " + Token)
 	if err != nil {
-		fmt.Println("error creating Discord session:", err)
+		log.Println("error creating Discord session:", err)
 		return
 	}
 	s.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		fmt.Println("Bot is ready")
+		log.Println("Bot is ready")
 
 		baseFilePath := getBasePath()
 		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
 			err := os.Mkdir(baseFilePath, 0750)
 			if err != nil {
-				fmt.Println(err)
+				log.Println(err)
 				return
 			}
 		}
@@ -81,7 +81,7 @@ func main() {
 
 		channel, err := s.Channel(r.ChannelID)
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return
 		}
 		if channel.Name != ChannelName {
@@ -103,7 +103,7 @@ func main() {
 	defer func(s *discordgo.Session) {
 		err := s.Close()
 		if err != nil {
-			fmt.Println("err closing session", err)
+			log.Println("err closing session", err)
 		}
 	}(s)
 
@@ -142,7 +142,7 @@ func loadImage(fileInput string) (image.Image, error) {
 	defer func(f *os.File) {
 		err := f.Close()
 		if err != nil {
-			fmt.Println("err closing image file", err)
+			log.Println("err closing image file", err)
 		}
 	}(f)
 	img, _, err := image.Decode(f)
@@ -153,7 +153,7 @@ func recordAndSend(s *discordgo.Session, guildId string, channelId string, user 
 	v, err := s.ChannelVoiceJoin(guildId, channelId, true, false)
 
 	if err != nil {
-		fmt.Println("failed to join voice channel:", err)
+		log.Println("failed to join voice channel:", err)
 		return
 	}
 
@@ -163,7 +163,7 @@ func recordAndSend(s *discordgo.Session, guildId string, channelId string, user 
 		v.Close()
 		err := v.Disconnect()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}()
 
@@ -234,7 +234,7 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 
 	file, err := os.Open(filepath.Clean(mp3FullName))
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 
@@ -247,7 +247,7 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}(file)
 
@@ -276,7 +276,7 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 		Files: discFiles,
 	})
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		return
 	}
 }
@@ -290,7 +290,7 @@ func downloadFile(URL, fileName string) error {
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
 		if err != nil {
-			fmt.Println("error closing http response body", err)
+			log.Println("error closing http response body", err)
 		}
 	}(response.Body)
 
@@ -305,7 +305,7 @@ func downloadFile(URL, fileName string) error {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			fmt.Println("error closing file", err)
+			log.Println("error closing file", err)
 		}
 	}(file)
 
@@ -326,7 +326,7 @@ func getDuration(fileName string) float64 {
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 		}
 	}(file1)
 
@@ -341,7 +341,7 @@ func getDuration(fileName string) float64 {
 			if err == io.EOF {
 				break
 			}
-			fmt.Println(err)
+			log.Println(err)
 			return 0
 		}
 
@@ -361,7 +361,7 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 			var err error
 			file, err = oggwriter.New(resolveFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
 			if err != nil {
-				fmt.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
+				log.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 				return nil
 			}
 			files[name] = file
@@ -370,7 +370,7 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 		rtpPacket := createPionRTPPacket(p)
 		err := file.WriteRTP(rtpPacket)
 		if err != nil {
-			fmt.Printf("failed to write to file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
+			log.Printf("failed to write to file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 		}
 	}
 
@@ -384,7 +384,7 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 
 		err = convertToMp3(resolveFullPath(fmt.Sprintf("%s.ogg", fileName)), resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
 		if err != nil {
-			fmt.Println(err)
+			log.Println(err)
 			return nil
 		}
 		mp3Names = append(mp3Names, fileName)
