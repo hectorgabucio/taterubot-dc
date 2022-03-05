@@ -1,4 +1,4 @@
-module taterubot
+module github.com/hectorgabucio/taterubot-dc
 
 go 1.18
 
