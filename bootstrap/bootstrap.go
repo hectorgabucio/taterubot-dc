@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/bwmarrin/discordgo"
+	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -35,7 +36,10 @@ func getBasePath() string {
 type config struct {
 	BotToken    string `default:"token" split_words:"true"`
 	ChannelName string `default:"TATERU" split_words:"true"`
+	Language    string `default:"en" split_words:"true"`
 }
+
+var l *localizations.Localizer
 
 func Run() error {
 
@@ -44,6 +48,8 @@ func Run() error {
 	if err != nil {
 		return err
 	}
+
+	l = localizations.New(cfg.Language, "en")
 
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
@@ -59,6 +65,28 @@ func Run() error {
 				log.Println(err)
 				return
 			}
+		}
+
+		guilds, err := s.UserGuilds(100, "", "")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		for _, guild := range guilds {
+			channels, err := s.GuildChannels(guild.ID)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			for _, channel := range channels {
+				if channel.Type == discordgo.ChannelTypeGuildText {
+
+					_, _ = s.ChannelMessageSend(channel.ID, l.Get("texts.hello", &localizations.Replacements{"voiceChannel": cfg.ChannelName, "botName": r.User.Username}))
+					break
+				}
+			}
+
 		}
 
 	})
@@ -275,7 +303,7 @@ func sendAudioFile(s *discordgo.Session, chID string, fileName string, user *dis
 		},
 		Fields: []*discordgo.MessageEmbedField{
 			{
-				Name:   "Duration",
+				Name:   l.Get("texts.duration"),
 				Value:  formatSeconds(int(t)),
 				Inline: false,
 			},

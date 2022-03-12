@@ -1,0 +1,4 @@
+{
+  "hello": ":wave: Hey! I am **{{.botName}}**. Im capable of recording everything you say and transform it into an audio message.\\n:flag_gb: I am configured to talk to you in english.\\n:microphone2: To start recording, enter the channel **{{.voiceChannel}}** and start talking to me.\\n:sound: When you get out the channel, I will send the audio message.",
+  "duration": "Duration"
+}

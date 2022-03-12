@@ -5,6 +5,8 @@ import (
 	"log"
 )
 
+//go:generate go-localize -input localizations_src -output localizations
+
 func main() {
 	if err := bootstrap.Run(); err != nil {
 		log.Fatal(err)
