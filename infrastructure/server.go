@@ -120,7 +120,7 @@ func (server *Server) Run(ctx context.Context) error {
 		}
 
 		lockedUser = r.UserID
-		server.recordAndSend(s, r.GuildID, r.ChannelID, user, done)
+		server.recordAndSend(r.GuildID, r.ChannelID, user, done)
 		lockedUser = ""
 	})
 
@@ -190,8 +190,8 @@ func loadImage(fileInput string) (image.Image, error) {
 	return img, err
 }
 
-func (server *Server) recordAndSend(s *discordgo.Session, guildId string, channelId string, user *discordgo.User, done chan bool) {
-	v, err := s.ChannelVoiceJoin(guildId, channelId, true, false)
+func (server *Server) recordAndSend(guildId string, channelId string, user *discordgo.User, done chan bool) {
+	v, err := server.session.ChannelVoiceJoin(guildId, channelId, true, false)
 
 	if err != nil {
 		log.Println("failed to join voice channel:", err)
@@ -210,7 +210,7 @@ func (server *Server) recordAndSend(s *discordgo.Session, guildId string, channe
 
 	fileNames := handleVoice(v.OpusRecv, user)
 	defer deleteFiles(fileNames)
-	server.sendAudioFiles(s, guildId, fileNames, user)
+	server.sendAudioFiles(guildId, fileNames, user)
 
 }
 
@@ -223,8 +223,8 @@ func deleteFiles(fileNames []string) {
 
 }
 
-func (server *Server) sendAudioFiles(s *discordgo.Session, guildId string, fileNames []string, user *discordgo.User) {
-	channels, err := s.GuildChannels(guildId)
+func (server *Server) sendAudioFiles(guildId string, fileNames []string, user *discordgo.User) {
+	channels, err := server.session.GuildChannels(guildId)
 	if err != nil {
 		return
 	}
@@ -243,7 +243,7 @@ func (server *Server) sendAudioFiles(s *discordgo.Session, guildId string, fileN
 	}
 
 	for _, fileName := range fileNames {
-		server.sendAudioFile(s, chID, fileName, user)
+		server.sendAudioFile(chID, fileName, user)
 	}
 
 }
@@ -274,7 +274,7 @@ func resolveFullPath(fileName string) string {
 	return fmt.Sprintf("%s/%s", baseFilePath, fileName)
 }
 
-func (server *Server) sendAudioFile(s *discordgo.Session, chID string, fileName string, user *discordgo.User) {
+func (server *Server) sendAudioFile(chID string, fileName string, user *discordgo.User) {
 	mp3FullName := resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
 	t := getDuration(mp3FullName)
 
@@ -317,7 +317,7 @@ func (server *Server) sendAudioFile(s *discordgo.Session, chID string, fileName 
 			},
 		},
 	}
-	_, err = s.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
+	_, err = server.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
 		Embed: embed,
 		Files: discFiles,
 	})
