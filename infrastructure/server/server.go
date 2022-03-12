@@ -1,4 +1,4 @@
-package infrastructure
+package server
 
 import (
 	"bufio"
@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/config"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
+	"github.com/hectorgabucio/taterubot-dc/service"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
@@ -25,19 +26,11 @@ import (
 	"time"
 )
 
-func getBasePath() string {
-	var baseFilePath = os.Getenv("BASE_PATH")
-	if baseFilePath == "" {
-		baseFilePath = "./tmp"
-	}
-	return baseFilePath
-
-}
-
 type Server struct {
-	config       config.Config
-	localization *localizations.Localizer
-	session      *discordgo.Session
+	config          config.Config
+	localization    *localizations.Localizer
+	session         *discordgo.Session
+	greetingService *service.GreetingMessageCreator
 }
 
 func NewServer(ctx context.Context, l *localizations.Localizer, cfg config.Config) (context.Context, Server) {
@@ -47,86 +40,27 @@ func NewServer(ctx context.Context, l *localizations.Localizer, cfg config.Confi
 	if err != nil {
 		log.Fatal("Error initializing bot: " + err.Error())
 	}
-	srv := Server{cfg, l, s}
+	// We only really care about receiving voice state updates.
+	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
+
+	greeting := service.NewGreetingMessageCreator(s, l, cfg.ChannelName)
+
+	srv := Server{cfg, l, s, greeting}
+	srv.registerHandlers()
 
 	return serverContext(ctx), srv
 }
 
-func setupHandlers() {
-	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+func (server *Server) registerHandlers() {
+	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is ready")
 
-		baseFilePath := getBasePath()
-		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
-			err := os.Mkdir(baseFilePath, 0750)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-		}
-
-		guilds, err := s.UserGuilds(100, "", "")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		for _, guild := range guilds {
-			channels, err := s.GuildChannels(guild.ID)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			for _, channel := range channels {
-				if channel.Type == discordgo.ChannelTypeGuildText {
-
-					_, _ = s.ChannelMessageSend(channel.ID, server.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": server.config.ChannelName, "botName": r.User.Username}))
-					break
-				}
-			}
-
-		}
+		server.greetingService.Send()
 
 	})
 }
 
 func (server *Server) Run(ctx context.Context) error {
-
-	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
-		log.Println("Bot is ready")
-
-		baseFilePath := getBasePath()
-		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
-			err := os.Mkdir(baseFilePath, 0750)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-		}
-
-		guilds, err := s.UserGuilds(100, "", "")
-		if err != nil {
-			log.Println(err)
-			return
-		}
-		for _, guild := range guilds {
-			channels, err := s.GuildChannels(guild.ID)
-			if err != nil {
-				log.Println(err)
-				return
-			}
-
-			for _, channel := range channels {
-				if channel.Type == discordgo.ChannelTypeGuildText {
-
-					_, _ = s.ChannelMessageSend(channel.ID, server.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": server.config.ChannelName, "botName": r.User.Username}))
-					break
-				}
-			}
-
-		}
-
-	})
 
 	var lockedUser string
 	done := make(chan bool)
@@ -162,9 +96,6 @@ func (server *Server) Run(ctx context.Context) error {
 		lockedUser = ""
 	})
 
-	// We only really care about receiving voice state updates.
-	server.session.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
-
 	err := server.session.Open()
 	if err != nil {
 		return errors.New(fmt.Sprintf("Cannot open the session: %v", err))
@@ -193,9 +124,9 @@ func serverContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-func prominentColor(fileName string) (int, error) {
+func (server *Server) prominentColor(fileName string) (int, error) {
 	// Step 1: Load the image
-	img, err := loadImage(resolveFullPath(fmt.Sprintf("%s.png", fileName)))
+	img, err := loadImage(server.resolveFullPath(fmt.Sprintf("%s.png", fileName)))
 	if err != nil {
 		return 0, errors.New(fmt.Sprintf("Failed to load image: %v", err))
 	}
@@ -246,17 +177,17 @@ func (server *Server) recordAndSend(guildId string, channelId string, user *disc
 		}
 	}()
 
-	fileNames := handleVoice(v.OpusRecv, user)
-	defer deleteFiles(fileNames)
+	fileNames := server.handleVoice(v.OpusRecv, user)
+	defer server.deleteFiles(fileNames)
 	server.sendAudioFiles(guildId, fileNames, user)
 
 }
 
-func deleteFiles(fileNames []string) {
+func (server *Server) deleteFiles(fileNames []string) {
 	for _, fileName := range fileNames {
-		_ = os.Remove(resolveFullPath(fmt.Sprintf("%s.png", fileName)))
-		_ = os.Remove(resolveFullPath(fmt.Sprintf("%s.ogg", fileName)))
-		_ = os.Remove(resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
+		_ = os.Remove(server.resolveFullPath(fmt.Sprintf("%s.png", fileName)))
+		_ = os.Remove(server.resolveFullPath(fmt.Sprintf("%s.ogg", fileName)))
+		_ = os.Remove(server.resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
 	}
 
 }
@@ -293,13 +224,13 @@ func formatSeconds(inSeconds int) string {
 	return str
 }
 
-func getDominantAvatarColor(url string, fileName string) int {
-	err := downloadFile(url, resolveFullPath(fmt.Sprintf("%s.png", fileName)))
+func (server *Server) getDominantAvatarColor(url string, fileName string) int {
+	err := downloadFile(url, server.resolveFullPath(fmt.Sprintf("%s.png", fileName)))
 	if err != nil {
 		log.Println(err)
 		return 0
 	}
-	color, err := prominentColor(fileName)
+	color, err := server.prominentColor(fileName)
 	if err != nil {
 		return 0
 	}
@@ -307,13 +238,13 @@ func getDominantAvatarColor(url string, fileName string) int {
 
 }
 
-func resolveFullPath(fileName string) string {
-	baseFilePath := getBasePath()
+func (server *Server) resolveFullPath(fileName string) string {
+	baseFilePath := server.config.BasePath
 	return fmt.Sprintf("%s/%s", baseFilePath, fileName)
 }
 
 func (server *Server) sendAudioFile(chID string, fileName string, user *discordgo.User) {
-	mp3FullName := resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
+	mp3FullName := server.resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
 	t := getDuration(mp3FullName)
 
 	file, err := os.Open(filepath.Clean(mp3FullName))
@@ -338,7 +269,7 @@ func (server *Server) sendAudioFile(chID string, fileName string, user *discordg
 	var discFiles []*discordgo.File
 	discFiles = append(discFiles, &discFile)
 
-	dominantColor := getDominantAvatarColor(user.AvatarURL(""), fileName)
+	dominantColor := server.getDominantAvatarColor(user.AvatarURL(""), fileName)
 
 	embed := &discordgo.MessageEmbed{
 		Title:     user.Username,
@@ -436,14 +367,14 @@ func getDuration(fileName string) float64 {
 
 }
 
-func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
+func (server *Server) handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 	files := make(map[string]media.Writer)
 	for p := range c {
 		name := user.Username + "-" + fmt.Sprintf("%d", p.SSRC)
 		file, ok := files[name]
 		if !ok {
 			var err error
-			file, err = oggwriter.New(resolveFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
+			file, err = oggwriter.New(server.resolveFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
 			if err != nil {
 				log.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 				return nil
@@ -466,7 +397,7 @@ func handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
 			return nil
 		}
 
-		err = convertToMp3(resolveFullPath(fmt.Sprintf("%s.ogg", fileName)), resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
+		err = convertToMp3(server.resolveFullPath(fmt.Sprintf("%s.ogg", fileName)), server.resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
 		if err != nil {
 			log.Println(err)
 			return nil
