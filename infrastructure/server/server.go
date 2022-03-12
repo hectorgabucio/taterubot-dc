@@ -52,6 +52,44 @@ func NewServer(ctx context.Context, l *localizations.Localizer, cfg config.Confi
 	return serverContext(ctx), srv
 }
 
+func setupHandlers() {
+	session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
+		log.Println("Bot is ready")
+
+		baseFilePath := getBasePath()
+		if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
+			err := os.Mkdir(baseFilePath, 0750)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+		}
+
+		guilds, err := s.UserGuilds(100, "", "")
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		for _, guild := range guilds {
+			channels, err := s.GuildChannels(guild.ID)
+			if err != nil {
+				log.Println(err)
+				return
+			}
+
+			for _, channel := range channels {
+				if channel.Type == discordgo.ChannelTypeGuildText {
+
+					_, _ = s.ChannelMessageSend(channel.ID, server.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": server.config.ChannelName, "botName": r.User.Username}))
+					break
+				}
+			}
+
+		}
+
+	})
+}
+
 func (server *Server) Run(ctx context.Context) error {
 
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
