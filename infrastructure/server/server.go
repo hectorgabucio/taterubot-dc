@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/bwmarrin/discordgo"
+	"github.com/hectorgabucio/taterubot-dc/application"
 	"github.com/hectorgabucio/taterubot-dc/config"
+	"github.com/hectorgabucio/taterubot-dc/domain"
+	inmemory "github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
-	"github.com/hectorgabucio/taterubot-dc/service"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
@@ -27,10 +29,11 @@ import (
 )
 
 type Server struct {
-	config          config.Config
-	localization    *localizations.Localizer
-	session         *discordgo.Session
-	greetingService *service.GreetingMessageCreator
+	config               config.Config
+	localization         *localizations.Localizer
+	session              *discordgo.Session
+	greetingService      *application.GreetingMessageCreator
+	lockedUserRepository domain.LockedUserRepository
 }
 
 func NewServer(ctx context.Context, l *localizations.Localizer, cfg config.Config) (context.Context, Server) {
@@ -43,9 +46,10 @@ func NewServer(ctx context.Context, l *localizations.Localizer, cfg config.Confi
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
-	greeting := service.NewGreetingMessageCreator(s, l, cfg.ChannelName)
+	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
+	repo := inmemory.New()
 
-	srv := Server{cfg, l, s, greeting}
+	srv := Server{cfg, l, s, greeting, repo}
 	srv.registerHandlers()
 
 	return serverContext(ctx), srv
@@ -62,7 +66,6 @@ func (server *Server) registerHandlers() {
 
 func (server *Server) Run(ctx context.Context) error {
 
-	var lockedUser string
 	done := make(chan bool)
 	defer close(done)
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.VoiceStateUpdate) {
@@ -73,12 +76,15 @@ func (server *Server) Run(ctx context.Context) error {
 		if user.Bot {
 			return
 		}
-		if r.ChannelID == "" && lockedUser != r.UserID {
+
+		currentLockedUser := server.lockedUserRepository.GetCurrentLock()
+
+		if r.ChannelID == "" && currentLockedUser != r.UserID {
 			return
 		}
-		if lockedUser == r.UserID {
+		if currentLockedUser == r.UserID {
 			done <- true
-			lockedUser = ""
+			server.lockedUserRepository.ReleaseUserLock()
 			return
 		}
 
@@ -91,9 +97,9 @@ func (server *Server) Run(ctx context.Context) error {
 			return
 		}
 
-		lockedUser = r.UserID
+		server.lockedUserRepository.SetLock(r.UserID)
 		server.recordAndSend(r.GuildID, r.ChannelID, user, done)
-		lockedUser = ""
+		server.lockedUserRepository.ReleaseUserLock()
 	})
 
 	err := server.session.Open()
