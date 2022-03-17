@@ -158,8 +158,6 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string,
 
 func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *discordgo.User) {
 	mp3FullName := usecase.resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
-	t := getDuration(mp3FullName)
-
 	file, err := os.Open(filepath.Clean(mp3FullName))
 	if err != nil {
 		log.Println(err)
@@ -181,8 +179,16 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 
 	var discFiles []*discordgo.File
 	discFiles = append(discFiles, &discFile)
+	messageSent, err := usecase.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
+		Files: discFiles,
+	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	dominantColor := usecase.getDominantAvatarColor(user.AvatarURL(""), fileName)
+	t := getDuration(mp3FullName)
 
 	embed := &discordgo.MessageEmbed{
 		Title:     user.Username,
@@ -199,10 +205,7 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 			},
 		},
 	}
-	_, err = usecase.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Embed: embed,
-		Files: discFiles,
-	})
+	_, err = usecase.session.ChannelMessageEditEmbed(messageSent.ChannelID, messageSent.ID, embed)
 	if err != nil {
 		log.Println(err)
 		return
@@ -306,7 +309,7 @@ func downloadFile(URL, fileName string) error {
 	}(response.Body)
 
 	if response.StatusCode != 200 {
-		return errors.New("Received non 200 response code")
+		return errors.New("received non 200 response code")
 	}
 	//Create a empty file
 	file, err := os.Create(filepath.Clean(fileName))
