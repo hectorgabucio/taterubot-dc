@@ -1,4 +1,4 @@
 {
-  "hello": ":wave: Hola! Soy **{{.botName}}**. Soy un bot capaz de grabar lo que dices y transformarlo en mensajes de voz.\\n:flag_es: Estoy configurado para hablarte en castellano.\\n:microphone2: Para empezar a grabar, entra en el canal **{{.voiceChannel}}** y empieza a hablarme.\\n:sound: Cuando salgas del mismo, mandaré el mensaje de voz.",
+  "hello": ":wave: Hola! Soy **{{.botName}}**. Soy un bot capaz de grabar lo que dices y transformarlo en mensajes de voz.\\n:flag_es: Estoy configurado para responderte en castellano.\\n:microphone2: Para empezar a grabar, entra en el canal **{{.voiceChannel}}** y empieza a hablarme.\\n:sound: Cuando salgas del mismo, mandaré el mensaje de voz.",
   "duration": "Duración"
 }
