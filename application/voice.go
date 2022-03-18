@@ -67,7 +67,6 @@ func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, channelId stri
 
 	usecase.lockedUserRepository.SetLock(userId)
 	usecase.recordAndSend(guildID, channelId, user, done)
-	usecase.lockedUserRepository.ReleaseUserLock()
 }
 
 func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, user *discordgo.User, done chan bool) {
@@ -80,21 +79,19 @@ func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, us
 
 	go func() {
 		<-done
+		log.Println("done recording")
 		close(v.OpusRecv)
 		v.Close()
 		err := v.Disconnect()
 		if err != nil {
 			log.Println(err)
 		}
+
 	}()
-
-	fileNames := usecase.handleVoice(v.OpusRecv, user)
-	defer usecase.deleteFiles(fileNames)
-	usecase.sendAudioFiles(guildId, fileNames, user)
-
+	usecase.handleVoice(v.OpusRecv, user, guildId)
 }
 
-func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discordgo.User) []string {
+func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discordgo.User, guildId string) []string {
 	files := make(map[string]media.Writer)
 	for p := range c {
 		name := user.Username + "-" + fmt.Sprintf("%d", p.SSRC)
@@ -116,6 +113,8 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discor
 		}
 	}
 
+	log.Println("done listening voice")
+
 	// Once we made it here, we're done listening for packets. Close all files
 	var mp3Names []string
 	for fileName, f := range files {
@@ -131,6 +130,12 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discor
 		}
 		mp3Names = append(mp3Names, fileName)
 	}
+
+	// TODO event recording file created
+	usecase.sendAudioFiles(guildId, mp3Names, user)
+
+	// TODO event finished with processing files
+	defer usecase.deleteFiles(mp3Names)
 	return mp3Names
 
 }
