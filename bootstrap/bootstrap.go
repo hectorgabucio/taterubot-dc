@@ -30,10 +30,6 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	}
 
 	eventBus := inmemory.NewEventBus()
-	eventBus.Subscribe(
-		domain.AudioSentEventType,
-		application.NewAddMetadataOnAudioSent(),
-	)
 
 	lockedUserRepo := inmemory.NewLockedUserRepository()
 
@@ -44,9 +40,14 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
+	eventBus.Subscribe(
+		domain.AudioSentEventType,
+		application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), cfg.BasePath),
+	)
+
 	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
 
-	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, cfg.BasePath, l.GetWithLocale(cfg.Language, "texts.duration"))
+	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, cfg.BasePath)
 
 	ctx, srv := server.NewServer(context.Background(), s, greeting, voice)
 	return nil, ctx, &srv

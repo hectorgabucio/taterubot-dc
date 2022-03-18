@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/EdlinOrg/prominentcolor"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
@@ -20,8 +19,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"strconv"
-	"time"
 )
 
 type VoiceRecorder struct {
@@ -30,17 +27,15 @@ type VoiceRecorder struct {
 	session              *discordgo.Session
 	configChannelName    string
 	basePath             string
-	durationText         string
 }
 
-func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, basePath string, durationText string) *VoiceRecorder {
+func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, basePath string) *VoiceRecorder {
 	return &VoiceRecorder{
 		lockedUserRepository: lockedUserRepository,
 		eventBus:             eventBus,
 		session:              session,
 		configChannelName:    configChannelName,
 		basePath:             basePath,
-		durationText:         durationText,
 	}
 }
 
@@ -197,7 +192,7 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 	}
 
 	events := []event.Event{
-		domain.NewAudioSentEvent(messageSent.ID),
+		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelID, user.Username, user.AvatarURL(""), mp3FullName, fileName),
 	}
 
 	err = usecase.eventBus.Publish(context.Background(), events)
@@ -206,63 +201,6 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 		return
 	}
 
-	dominantColor := usecase.getDominantAvatarColor(user.AvatarURL(""), fileName)
-	t := getDuration(mp3FullName)
-
-	embed := &discordgo.MessageEmbed{
-		Title:     user.Username,
-		Timestamp: time.Now().Format(time.RFC3339),
-		Color:     dominantColor,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: user.AvatarURL(""),
-		},
-		Fields: []*discordgo.MessageEmbedField{
-			{
-				Name:   usecase.durationText,
-				Value:  formatSeconds(int(t)),
-				Inline: false,
-			},
-		},
-	}
-	_, err = usecase.session.ChannelMessageEditEmbed(messageSent.ChannelID, messageSent.ID, embed)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-}
-
-func (usecase *VoiceRecorder) getDominantAvatarColor(url string, fileName string) int {
-	err := downloadFile(url, usecase.resolveFullPath(fmt.Sprintf("%s.png", fileName)))
-	if err != nil {
-		log.Println(err)
-		return 0
-	}
-	color, err := usecase.prominentColor(fileName)
-	if err != nil {
-		return 0
-	}
-	return color
-
-}
-
-func (usecase *VoiceRecorder) prominentColor(fileName string) (int, error) {
-	// Step 1: Load the image
-	img, err := loadImage(usecase.resolveFullPath(fmt.Sprintf("%s.png", fileName)))
-	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Failed to load image: %v", err))
-	}
-
-	// Step 2: Process it
-	colours, err := prominentcolor.Kmeans(img)
-	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Failed to process image: %v", err))
-	}
-
-	for _, colour := range colours {
-		value, _ := strconv.ParseInt(colour.AsString(), 16, 64)
-		return int(value), nil
-	}
-	return 0, errors.New("couldnt get any dominant color")
 }
 
 func (usecase *VoiceRecorder) resolveFullPath(fileName string) string {
