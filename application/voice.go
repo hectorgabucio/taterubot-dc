@@ -2,11 +2,13 @@ package application
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"github.com/EdlinOrg/prominentcolor"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
+	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
@@ -24,15 +26,17 @@ import (
 
 type VoiceRecorder struct {
 	lockedUserRepository domain.LockedUserRepository
+	eventBus             event.Bus
 	session              *discordgo.Session
 	configChannelName    string
 	basePath             string
 	durationText         string
 }
 
-func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, basePath string, durationText string) *VoiceRecorder {
+func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, basePath string, durationText string) *VoiceRecorder {
 	return &VoiceRecorder{
 		lockedUserRepository: lockedUserRepository,
+		eventBus:             eventBus,
 		session:              session,
 		configChannelName:    configChannelName,
 		basePath:             basePath,
@@ -182,6 +186,16 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 	messageSent, err := usecase.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
 		Files: discFiles,
 	})
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	events := []event.Event{
+		domain.NewAudioSentEvent(messageSent.ID),
+	}
+
+	err = usecase.eventBus.Publish(context.Background(), events)
 	if err != nil {
 		log.Println(err)
 		return

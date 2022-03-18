@@ -4,7 +4,7 @@ type Repository struct {
 	lockedUser string
 }
 
-func New() *Repository {
+func NewLockedUserRepository() *Repository {
 	return &Repository{lockedUser: ""}
 }
 

@@ -5,6 +5,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/application"
 	"github.com/hectorgabucio/taterubot-dc/config"
+	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
@@ -28,7 +29,13 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 		}
 	}
 
-	lockedUserRepo := inmemory.New()
+	eventBus := inmemory.NewEventBus()
+	eventBus.Subscribe(
+		domain.AudioSentEventType,
+		application.NewAddMetadataOnAudioSent(),
+	)
+
+	lockedUserRepo := inmemory.NewLockedUserRepository()
 
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
@@ -39,7 +46,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 
 	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
 
-	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, cfg.BasePath, l.GetWithLocale(cfg.Language, "texts.duration"))
+	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, cfg.BasePath, l.GetWithLocale(cfg.Language, "texts.duration"))
 
 	ctx, srv := server.NewServer(context.Background(), s, greeting, voice)
 	return nil, ctx, &srv
