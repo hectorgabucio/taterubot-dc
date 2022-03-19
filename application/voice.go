@@ -3,7 +3,6 @@ package application
 import (
 	"bufio"
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
@@ -11,14 +10,9 @@ import (
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
-	"github.com/tcolgate/mp3"
-	"image"
-	"io"
 	"log"
-	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
 )
 
 type VoiceRecorder struct {
@@ -26,16 +20,16 @@ type VoiceRecorder struct {
 	eventBus             event.Bus
 	session              *discordgo.Session
 	configChannelName    string
-	basePath             string
+	fsRepo               domain.FileRepository
 }
 
-func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, basePath string) *VoiceRecorder {
+func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository) *VoiceRecorder {
 	return &VoiceRecorder{
 		lockedUserRepository: lockedUserRepository,
 		eventBus:             eventBus,
 		session:              session,
 		configChannelName:    configChannelName,
-		basePath:             basePath,
+		fsRepo:               fsRepo,
 	}
 }
 
@@ -93,7 +87,7 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discor
 		file, ok := files[name]
 		if !ok {
 			var err error
-			file, err = oggwriter.New(usecase.resolveFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
+			file, err = oggwriter.New(usecase.fsRepo.GetFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
 			if err != nil {
 				log.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 				return nil
@@ -118,7 +112,7 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discor
 			return nil
 		}
 
-		err = convertToMp3(usecase.resolveFullPath(fmt.Sprintf("%s.ogg", fileName)), usecase.resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
+		err = convertToMp3(usecase.fsRepo.GetFullPath(fmt.Sprintf("%s.ogg", fileName)), usecase.fsRepo.GetFullPath(fmt.Sprintf("%s.mp3", fileName)))
 		if err != nil {
 			log.Println(err)
 			return nil
@@ -161,8 +155,8 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string,
 }
 
 func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *discordgo.User) {
-	mp3FullName := usecase.resolveFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
-	file, err := os.Open(filepath.Clean(mp3FullName))
+	mp3FullName := usecase.fsRepo.GetFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
+	file, err := usecase.fsRepo.Open(mp3FullName)
 	if err != nil {
 		log.Println(err)
 		return
@@ -203,11 +197,6 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 
 }
 
-func (usecase *VoiceRecorder) resolveFullPath(fileName string) string {
-	baseFilePath := usecase.basePath
-	return fmt.Sprintf("%s/%s", baseFilePath, fileName)
-}
-
 func convertToMp3(input string, output string) error {
 	cmd := exec.Command("ffmpeg", "-y", "-i", input, output)
 
@@ -229,105 +218,7 @@ func createPionRTPPacket(p *discordgo.Packet) *rtp.Packet {
 		Payload: p.Opus,
 	}
 }
-
-func formatSeconds(inSeconds int) string {
-	minutes := inSeconds / 60
-	seconds := inSeconds % 60
-	str := fmt.Sprintf("%dm:%02ds", minutes, seconds)
-	return str
-}
-
-func loadImage(fileInput string) (image.Image, error) {
-	f, err := os.Open(filepath.Clean(fileInput))
-	if err != nil {
-		return nil, err
-	}
-	defer func(f *os.File) {
-		err := f.Close()
-		if err != nil {
-			log.Println("err closing image file", err)
-		}
-	}(f)
-	img, _, err := image.Decode(f)
-	return img, err
-}
-
-func downloadFile(URL, fileName string) error {
-	//Get the response bytes from the url
-	response, err := http.Get(URL)
-	if err != nil {
-		return err
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Println("error closing http response body", err)
-		}
-	}(response.Body)
-
-	if response.StatusCode != 200 {
-		return errors.New("received non 200 response code")
-	}
-	//Create a empty file
-	file, err := os.Create(filepath.Clean(fileName))
-	if err != nil {
-		return err
-	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Println("error closing file", err)
-		}
-	}(file)
-
-	//Write the bytes to the field
-	_, err = io.Copy(file, response.Body)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func getDuration(fileName string) float64 {
-	file1, err := os.Open(filepath.Clean(fileName))
-	if err != nil {
-		return 0
-	}
-	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Println(err)
-		}
-	}(file1)
-
-	d := mp3.NewDecoder(file1)
-	var f mp3.Frame
-	skipped := 0
-
-	var t float64
-	for {
-
-		if err := d.Decode(&f, &skipped); err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Println(err)
-			return 0
-		}
-
-		t = t + f.Duration().Seconds()
-	}
-
-	return t
-
-}
-
 func (usecase *VoiceRecorder) deleteFiles(fileNames []string) {
-	for _, fileName := range fileNames {
-		_ = os.Remove(usecase.resolveFullPath(fmt.Sprintf("%s.png", fileName)))
-		_ = os.Remove(usecase.resolveFullPath(fmt.Sprintf("%s.ogg", fileName)))
-		_ = os.Remove(usecase.resolveFullPath(fmt.Sprintf("%s.mp3", fileName)))
-	}
+	usecase.fsRepo.DeleteAll(fileNames...)
 
 }

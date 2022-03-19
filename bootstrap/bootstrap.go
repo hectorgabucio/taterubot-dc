@@ -7,13 +7,14 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/config"
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
+	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/kelseyhightower/envconfig"
-	"os"
 )
 
 func createServerAndDependencies() (error, context.Context, *server.Server) {
+	// CONFIG
 	var cfg config.Config
 	err := envconfig.Process("", &cfg)
 	if err != nil {
@@ -21,18 +22,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	}
 	l := localizations.New(cfg.Language, "en")
 
-	baseFilePath := cfg.BasePath
-	if _, err := os.Stat(baseFilePath); os.IsNotExist(err) {
-		err := os.Mkdir(baseFilePath, 0750)
-		if err != nil {
-			return err, nil, nil
-		}
-	}
-
-	eventBus := inmemory.NewEventBus()
-
-	lockedUserRepo := inmemory.NewLockedUserRepository()
-
+	// INFRASTRUCTURE
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
 		return err, nil, nil
@@ -40,14 +30,17 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
-	eventBus.Subscribe(
-		domain.AudioSentEventType,
-		application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), cfg.BasePath),
-	)
+	eventBus := inmemory.NewEventBus()
+	lockedUserRepo := inmemory.NewLockedUserRepository()
+	fsRepo := localfs.NewRepository(cfg.BasePath)
 
+	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
+	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo)
+	embedAudioData := application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo)
 
-	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, cfg.BasePath)
+	// EVENT SUBSCRIPTIONS
+	eventBus.Subscribe(domain.AudioSentEventType, embedAudioData)
 
 	ctx, srv := server.NewServer(context.Background(), s, greeting, voice)
 	return nil, ctx, &srv
