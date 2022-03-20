@@ -6,21 +6,22 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/application"
+	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"log"
 	"os"
 	"os/signal"
 )
 
 type Server struct {
-	session         *discordgo.Session
-	greetingService *application.GreetingMessageCreator
-	voiceService    *application.VoiceRecorder
+	session      *discordgo.Session
+	commandBus   command.Bus
+	voiceService *application.VoiceRecorder
 }
 
-func NewServer(ctx context.Context, session *discordgo.Session, greetingService *application.GreetingMessageCreator, voiceService *application.VoiceRecorder) (context.Context, Server) {
+func NewServer(ctx context.Context, session *discordgo.Session, commandBus command.Bus, voiceService *application.VoiceRecorder) (context.Context, Server) {
 	log.Println("Bot server running")
 
-	srv := Server{session, greetingService, voiceService}
+	srv := Server{session, commandBus, voiceService}
 	srv.registerHandlers()
 
 	return serverContext(ctx), srv
@@ -30,7 +31,11 @@ func (server *Server) registerHandlers() {
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is ready")
 
-		server.greetingService.Send()
+		err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
+		if err != nil {
+			log.Println("err greeting command", err)
+			return
+		}
 
 	})
 

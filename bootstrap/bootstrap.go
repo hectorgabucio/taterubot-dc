@@ -31,6 +31,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
 	eventBus := inmemory.NewEventBus()
+	commandBus := inmemory.NewCommandBus()
 	lockedUserRepo := inmemory.NewLockedUserRepository()
 	fsRepo := localfs.NewRepository(cfg.BasePath)
 
@@ -42,7 +43,12 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// EVENT SUBSCRIPTIONS
 	eventBus.Subscribe(domain.AudioSentEventType, embedAudioData)
 
-	ctx, srv := server.NewServer(context.Background(), s, greeting, voice)
+	// COMMAND HANDLING
+	greetingCommandHandler := application.NewGreetingCommandHandler(greeting)
+	commandBus.Register(application.GreetingCommandType, greetingCommandHandler)
+
+	// TODO code smell, the server would need command bus, and would trigger gretting and voice command
+	ctx, srv := server.NewServer(context.Background(), s, commandBus, voice)
 	return nil, ctx, &srv
 }
 
