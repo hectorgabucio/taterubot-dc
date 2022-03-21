@@ -3,9 +3,11 @@ package application
 import (
 	"bufio"
 	"context"
+	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
+	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media"
@@ -14,6 +16,50 @@ import (
 	"os"
 	"os/exec"
 )
+
+const RecordingCommandType command.Type = "command.recording"
+
+type RecordingCommand struct {
+	UserId           string
+	CurrentChannelId string
+	GuildId          string
+	Username         string
+	AvatarUrl        string
+}
+
+func NewRecordingCommand(userId string, channelId string, guildId string, username string, avatarUrl string) RecordingCommand {
+	return RecordingCommand{
+		UserId:           userId,
+		CurrentChannelId: channelId,
+		GuildId:          guildId,
+		Username:         username,
+		AvatarUrl:        avatarUrl,
+	}
+}
+
+func (c RecordingCommand) Type() command.Type {
+	return RecordingCommandType
+}
+
+type RecordingCommandHandler struct {
+	service *VoiceRecorder
+}
+
+// NewRecordingCommandHandler initializes a new RecordingCommandHandler.
+func NewRecordingCommandHandler(service *VoiceRecorder) RecordingCommandHandler {
+	return RecordingCommandHandler{
+		service: service,
+	}
+}
+
+// Handle implements the command.Handler interface.
+func (h RecordingCommandHandler) Handle(ctx context.Context, cmd command.Command) error {
+	recordingCmd, ok := cmd.(RecordingCommand)
+	if !ok {
+		return errors.New("unexpected command")
+	}
+	return h.service.HandleVoiceRecording(recordingCmd.UserId, recordingCmd.CurrentChannelId, recordingCmd.GuildId, recordingCmd.Username, recordingCmd.AvatarUrl)
+}
 
 type VoiceRecorder struct {
 	lockedUserRepository domain.LockedUserRepository
@@ -33,38 +79,38 @@ func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lock
 	}
 }
 
-func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId string, guildID string, user *discordgo.User) {
+func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId string, guildID string, username string, avatarUrl string) error {
 
 	currentLockedUser, done := usecase.lockedUserRepository.GetCurrentLock(guildID)
 
 	if nowChannelId == "" && currentLockedUser != userId {
-		return
+		return nil
 	}
 	if currentLockedUser == userId {
 		done <- true
 		usecase.lockedUserRepository.ReleaseUserLock(guildID)
-		return
+		return nil
 	}
 
 	channel, err := usecase.session.Channel(nowChannelId)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 	if channel.Name != usecase.configChannelName {
-		return
+		return nil
 	}
 
 	usecase.lockedUserRepository.SetLock(guildID, userId)
-	usecase.recordAndSend(guildID, nowChannelId, user, done)
+	return usecase.recordAndSend(guildID, nowChannelId, username, avatarUrl, done)
 }
 
-func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, user *discordgo.User, done chan bool) {
+func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, username string, avatarUrl string, done chan bool) error {
 	v, err := usecase.session.ChannelVoiceJoin(guildId, channelId, true, false)
 
 	if err != nil {
 		log.Println("failed to join voice channel:", err)
-		return
+		return err
 	}
 
 	go func() {
@@ -78,13 +124,14 @@ func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, us
 		}
 
 	}()
-	usecase.handleVoice(v.OpusRecv, user, guildId)
+	usecase.handleVoice(v.OpusRecv, guildId, username, avatarUrl)
+	return nil
 }
 
-func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discordgo.User, guildId string) []string {
+func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, guildId string, username string, avatarUrl string) []string {
 	files := make(map[string]media.Writer)
 	for p := range c {
-		name := user.Username + "-" + fmt.Sprintf("%d", p.SSRC)
+		name := username + "-" + fmt.Sprintf("%d", p.SSRC)
 		file, ok := files[name]
 		if !ok {
 			var err error
@@ -122,7 +169,7 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discor
 	}
 
 	// TODO event recording file created
-	usecase.sendAudioFiles(guildId, mp3Names, user)
+	usecase.sendAudioFiles(guildId, mp3Names, username, avatarUrl)
 
 	// TODO event finished with processing files
 	defer usecase.deleteFiles(mp3Names)
@@ -130,7 +177,7 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, user *discor
 
 }
 
-func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string, user *discordgo.User) {
+func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string, username string, avatarUrl string) {
 	channels, err := usecase.session.GuildChannels(guildId)
 	if err != nil {
 		return
@@ -150,12 +197,12 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string,
 	}
 
 	for _, fileName := range fileNames {
-		usecase.sendAudioFile(chID, fileName, user)
+		usecase.sendAudioFile(chID, fileName, username, avatarUrl)
 	}
 
 }
 
-func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *discordgo.User) {
+func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, username string, avatarUrl string) {
 	mp3FullName := usecase.fsRepo.GetFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
 	file, err := usecase.fsRepo.Open(mp3FullName)
 	if err != nil {
@@ -187,7 +234,7 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, user *
 	}
 
 	events := []event.Event{
-		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelID, user.Username, user.AvatarURL(""), mp3FullName, fileName),
+		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelID, username, avatarUrl, mp3FullName, fileName),
 	}
 
 	err = usecase.eventBus.Publish(context.Background(), events)

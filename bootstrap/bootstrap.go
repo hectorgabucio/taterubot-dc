@@ -47,8 +47,10 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	greetingCommandHandler := application.NewGreetingCommandHandler(greeting)
 	commandBus.Register(application.GreetingCommandType, greetingCommandHandler)
 
-	// TODO code smell, the server would need command bus, and would trigger gretting and voice command
-	ctx, srv := server.NewServer(context.Background(), s, commandBus, voice)
+	voiceCommandHandler := application.NewRecordingCommandHandler(voice)
+	commandBus.Register(application.RecordingCommandType, voiceCommandHandler)
+
+	ctx, srv := server.NewServer(context.Background(), s, commandBus)
 	return nil, ctx, &srv
 }
 

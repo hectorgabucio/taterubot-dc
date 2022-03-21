@@ -13,15 +13,14 @@ import (
 )
 
 type Server struct {
-	session      *discordgo.Session
-	commandBus   command.Bus
-	voiceService *application.VoiceRecorder
+	session    *discordgo.Session
+	commandBus command.Bus
 }
 
-func NewServer(ctx context.Context, session *discordgo.Session, commandBus command.Bus, voiceService *application.VoiceRecorder) (context.Context, Server) {
+func NewServer(ctx context.Context, session *discordgo.Session, commandBus command.Bus) (context.Context, Server) {
 	log.Println("Bot server running")
 
-	srv := Server{session, commandBus, voiceService}
+	srv := Server{session, commandBus}
 	srv.registerHandlers()
 
 	return serverContext(ctx), srv
@@ -47,8 +46,11 @@ func (server *Server) registerHandlers() {
 		if user.Bot {
 			return
 		}
-		// TODO make this a dispatch comand
-		server.voiceService.HandleVoiceRecording(r.UserID, r.ChannelID, r.GuildID, user)
+		err = server.commandBus.Dispatch(context.Background(), application.NewRecordingCommand(r.UserID, r.ChannelID, r.GuildID, user.Username, user.AvatarURL("")))
+		if err != nil {
+			log.Println("err recording command", err)
+			return
+		}
 
 	})
 }
