@@ -33,9 +33,9 @@ func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lock
 	}
 }
 
-func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId string, guildID string, user *discordgo.User, done chan bool) {
+func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId string, guildID string, user *discordgo.User) {
 
-	currentLockedUser := usecase.lockedUserRepository.GetCurrentLock(guildID)
+	currentLockedUser, done := usecase.lockedUserRepository.GetCurrentLock(guildID)
 
 	if nowChannelId == "" && currentLockedUser != userId {
 		return

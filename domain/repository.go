@@ -3,7 +3,7 @@ package domain
 import "os"
 
 type LockedUserRepository interface {
-	GetCurrentLock(guildId string) string
+	GetCurrentLock(guildId string) (string, chan bool)
 	ReleaseUserLock(guildId string)
 	SetLock(guildId string, userId string)
 }

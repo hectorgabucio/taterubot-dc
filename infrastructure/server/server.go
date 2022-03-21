@@ -39,7 +39,6 @@ func (server *Server) registerHandlers() {
 
 	})
 
-	done := make(chan bool)
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.VoiceStateUpdate) {
 		user, err := s.User(r.UserID)
 		if err != nil {
@@ -48,7 +47,8 @@ func (server *Server) registerHandlers() {
 		if user.Bot {
 			return
 		}
-		server.voiceService.HandleVoiceRecording(r.UserID, r.ChannelID, r.GuildID, user, done)
+		// TODO make this a dispatch comand
+		server.voiceService.HandleVoiceRecording(r.UserID, r.ChannelID, r.GuildID, user)
 
 	})
 }
