@@ -48,7 +48,6 @@ func (server *Server) registerHandlers() {
 		if user.Bot {
 			return
 		}
-
 		server.voiceService.HandleVoiceRecording(r.UserID, r.ChannelID, r.GuildID, user, done)
 
 	})

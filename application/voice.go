@@ -33,19 +33,20 @@ func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lock
 	}
 }
 
-func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, channelId string, guildID string, user *discordgo.User, done chan bool) {
-	currentLockedUser := usecase.lockedUserRepository.GetCurrentLock()
+func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId string, guildID string, user *discordgo.User, done chan bool) {
 
-	if channelId == "" && currentLockedUser != userId {
+	currentLockedUser := usecase.lockedUserRepository.GetCurrentLock(guildID)
+
+	if nowChannelId == "" && currentLockedUser != userId {
 		return
 	}
 	if currentLockedUser == userId {
 		done <- true
-		usecase.lockedUserRepository.ReleaseUserLock()
+		usecase.lockedUserRepository.ReleaseUserLock(guildID)
 		return
 	}
 
-	channel, err := usecase.session.Channel(channelId)
+	channel, err := usecase.session.Channel(nowChannelId)
 	if err != nil {
 		log.Println(err)
 		return
@@ -54,8 +55,8 @@ func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, channelId stri
 		return
 	}
 
-	usecase.lockedUserRepository.SetLock(userId)
-	usecase.recordAndSend(guildID, channelId, user, done)
+	usecase.lockedUserRepository.SetLock(guildID, userId)
+	usecase.recordAndSend(guildID, nowChannelId, user, done)
 }
 
 func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, user *discordgo.User, done chan bool) {
