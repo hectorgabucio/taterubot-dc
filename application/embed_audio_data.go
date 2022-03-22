@@ -10,7 +10,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
-	"github.com/tcolgate/mp3"
 	"image"
 	"io"
 	"log"
@@ -24,10 +23,11 @@ type AddMetadataOnAudioSent struct {
 	session      *discordgo.Session
 	durationText string
 	fsRepo       domain.FileRepository
+	decoder      domain.MP3Decoder
 }
 
-func NewAddMetadataOnAudioSent(session *discordgo.Session, durationText string, fsRepo domain.FileRepository) *AddMetadataOnAudioSent {
-	return &AddMetadataOnAudioSent{session: session, durationText: durationText, fsRepo: fsRepo}
+func NewAddMetadataOnAudioSent(session *discordgo.Session, durationText string, fsRepo domain.FileRepository, decoder domain.MP3Decoder) *AddMetadataOnAudioSent {
+	return &AddMetadataOnAudioSent{session: session, durationText: durationText, fsRepo: fsRepo, decoder: decoder}
 }
 
 func (handler *AddMetadataOnAudioSent) Handle(_ context.Context, evt event.Event) error {
@@ -160,26 +160,8 @@ func (handler *AddMetadataOnAudioSent) getDuration(fileName string) float64 {
 		}
 	}(file1)
 
-	d := mp3.NewDecoder(file1)
-	var f mp3.Frame
-	skipped := 0
-
-	var t float64
-	for {
-
-		if err := d.Decode(&f, &skipped); err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Println(err)
-			return 0
-		}
-
-		t = t + f.Duration().Seconds()
-	}
-
-	return t
-
+	duration := handler.decoder.GetDuration(file1)
+	return duration
 }
 
 func formatSeconds(inSeconds int) string {

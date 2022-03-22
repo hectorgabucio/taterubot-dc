@@ -6,6 +6,7 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/application"
 	"github.com/hectorgabucio/taterubot-dc/config"
 	"github.com/hectorgabucio/taterubot-dc/domain"
+	mp3decoder "github.com/hectorgabucio/taterubot-dc/infrastructure/decoder"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
@@ -34,11 +35,12 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	commandBus := inmemory.NewCommandBus()
 	lockedUserRepo := inmemory.NewLockedUserRepository()
 	fsRepo := localfs.NewRepository(cfg.BasePath)
+	decoder := mp3decoder.NewMP3Decoder()
 
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
 	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo)
-	embedAudioData := application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo)
+	embedAudioData := application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, decoder)
 
 	// EVENT SUBSCRIPTIONS
 	eventBus.Subscribe(domain.AudioSentEventType, embedAudioData)

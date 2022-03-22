@@ -172,7 +172,7 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, guildId stri
 	usecase.sendAudioFiles(guildId, mp3Names, username, avatarUrl)
 
 	// TODO event finished with processing files
-	defer usecase.deleteFiles(mp3Names)
+	//defer usecase.deleteFiles(mp3Names)
 	return mp3Names
 
 }
