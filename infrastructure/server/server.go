@@ -30,12 +30,12 @@ func (server *Server) registerHandlers() {
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is ready")
 
-		err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
-		if err != nil {
-			log.Println("err greeting command", err)
-			return
-		}
-
+		go func() {
+			err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
+			if err != nil {
+				log.Println("err greeting command", err)
+			}
+		}()
 	})
 
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.VoiceStateUpdate) {
@@ -46,11 +46,12 @@ func (server *Server) registerHandlers() {
 		if user.Bot {
 			return
 		}
-		err = server.commandBus.Dispatch(context.Background(), application.NewRecordingCommand(r.UserID, r.ChannelID, r.GuildID, user.Username, user.AvatarURL("")))
-		if err != nil {
-			log.Println("err recording command", err)
-			return
-		}
+		go func() {
+			err := server.commandBus.Dispatch(context.Background(), application.NewRecordingCommand(r.UserID, r.ChannelID, r.GuildID, user.Username, user.AvatarURL("")))
+			if err != nil {
+				log.Println("err recording command", err)
+			}
+		}()
 
 	})
 }

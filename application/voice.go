@@ -237,11 +237,12 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelID, username, avatarUrl, mp3FullName, fileName),
 	}
 
-	err = usecase.eventBus.Publish(context.Background(), events)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	go func() {
+		err := usecase.eventBus.Publish(context.Background(), events)
+		if err != nil {
+			log.Println("err publishing audio sent event", err)
+		}
+	}()
 
 }
 
