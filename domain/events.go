@@ -48,3 +48,20 @@ func (e AudioSentEvent) ChannelId() string {
 func (e AudioSentEvent) FileName() string {
 	return e.fileName
 }
+
+const DoneProcessingFilesEventType event.Type = "events.files.processed"
+
+type DoneProcessingFilesEvent struct {
+	id string
+	event.BaseEvent
+}
+
+func NewDoneProcessingFilesEvent(id string) DoneProcessingFilesEvent {
+	return DoneProcessingFilesEvent{
+		BaseEvent: event.NewBaseEvent(id),
+	}
+}
+
+func (e DoneProcessingFilesEvent) Type() event.Type {
+	return DoneProcessingFilesEventType
+}

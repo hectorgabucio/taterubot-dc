@@ -24,13 +24,14 @@ type AddMetadataOnAudioSent struct {
 	durationText string
 	fsRepo       domain.FileRepository
 	decoder      domain.MP3Decoder
+	bus          event.Bus
 }
 
-func NewAddMetadataOnAudioSent(session *discordgo.Session, durationText string, fsRepo domain.FileRepository, decoder domain.MP3Decoder) *AddMetadataOnAudioSent {
-	return &AddMetadataOnAudioSent{session: session, durationText: durationText, fsRepo: fsRepo, decoder: decoder}
+func NewAddMetadataOnAudioSent(session *discordgo.Session, durationText string, fsRepo domain.FileRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
+	return &AddMetadataOnAudioSent{session: session, durationText: durationText, fsRepo: fsRepo, decoder: decoder, bus: bus}
 }
 
-func (handler *AddMetadataOnAudioSent) Handle(_ context.Context, evt event.Event) error {
+func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Event) error {
 	audioSentEvt, ok := evt.(domain.AudioSentEvent)
 	if !ok {
 		return errors.New("unexpected event")
@@ -60,6 +61,12 @@ func (handler *AddMetadataOnAudioSent) Handle(_ context.Context, evt event.Event
 		log.Println(err)
 		return err
 	}
+	go func() {
+		err := handler.bus.Publish(ctx, []event.Event{domain.NewDoneProcessingFilesEvent(audioSentEvt.FileName())})
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 	return nil
 }
 

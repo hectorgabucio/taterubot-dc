@@ -39,9 +39,7 @@ func (repo *Repository) CreateEmpty(fileName string) (*os.File, error) {
 func (repo *Repository) DeleteAll(fileNames ...string) {
 	for _, fileName := range fileNames {
 		fileLocation := repo.sanitizePath(fileName)
-		_ = os.Remove(fmt.Sprintf("%s.png", fileLocation))
-		_ = os.Remove(fmt.Sprintf("%s.ogg", fileLocation))
-		_ = os.Remove(fmt.Sprintf("%s.mp3", fileLocation))
+		_ = os.Remove(fileLocation)
 	}
 }
 

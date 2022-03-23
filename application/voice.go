@@ -171,8 +171,6 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, guildId stri
 	// TODO event recording file created
 	usecase.sendAudioFiles(guildId, mp3Names, username, avatarUrl)
 
-	// TODO event finished with processing files
-	//defer usecase.deleteFiles(mp3Names)
 	return mp3Names
 
 }
@@ -266,8 +264,4 @@ func createPionRTPPacket(p *discordgo.Packet) *rtp.Packet {
 		},
 		Payload: p.Opus,
 	}
-}
-func (usecase *VoiceRecorder) deleteFiles(fileNames []string) {
-	usecase.fsRepo.DeleteAll(fileNames...)
-
 }

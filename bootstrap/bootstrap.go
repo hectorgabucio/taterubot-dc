@@ -40,10 +40,12 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
 	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo)
-	embedAudioData := application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, decoder)
+	embedAudioData := application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, decoder, eventBus)
+	removeFiles := application.NewRemoveFilesWhenNotNeeded(fsRepo)
 
 	// EVENT SUBSCRIPTIONS
 	eventBus.Subscribe(domain.AudioSentEventType, embedAudioData)
+	eventBus.Subscribe(domain.DoneProcessingFilesEventType, removeFiles)
 
 	// COMMAND HANDLING
 	greetingCommandHandler := application.NewGreetingCommandHandler(greeting)
