@@ -3,6 +3,7 @@ package application
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
@@ -63,7 +64,6 @@ func (service *GreetingMessageCreator) Send() error {
 		return err
 	}
 	botUsername := service.session.State.User.Username
-	greetingMessage := service.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": service.channelName, "botName": botUsername})
 	for _, guild := range guilds {
 		channels, err := service.session.GuildChannels(guild.ID)
 		if err != nil {
@@ -71,16 +71,40 @@ func (service *GreetingMessageCreator) Send() error {
 			return err
 		}
 
+		chosenChannelIdToSendGreeting := ""
+		voiceChannelId := ""
 		for _, channel := range channels {
 			if channel.Type == discordgo.ChannelTypeGuildText {
-				_, err = service.session.ChannelMessageSend(channel.ID, greetingMessage)
-				if err != nil {
-					log.Println(err)
-					return err
-				}
-				break
+				chosenChannelIdToSendGreeting = channel.ID
+			}
+			if channel.Type == discordgo.ChannelTypeGuildVoice && channel.Name == service.channelName {
+				voiceChannelId = channel.ID
 			}
 		}
+
+		// if no voice channel found, try to create it if possible
+		if voiceChannelId == "" {
+			createdChannel, err := service.session.GuildChannelCreateComplex(guild.ID, discordgo.GuildChannelCreateData{
+				Name:      service.channelName,
+				Type:      discordgo.ChannelTypeGuildVoice,
+				UserLimit: 2,
+			})
+			if err == nil {
+				voiceChannelId = createdChannel.ID
+			}
+		}
+
+		voiceChannelReplacement := fmt.Sprintf("<#%s>", voiceChannelId)
+		if voiceChannelId == "" {
+			voiceChannelReplacement = service.channelName
+		}
+		greetingMessage := service.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": voiceChannelReplacement, "botName": botUsername})
+		_, err = service.session.ChannelMessageSend(chosenChannelIdToSendGreeting, greetingMessage)
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		break
 
 	}
 	return nil
