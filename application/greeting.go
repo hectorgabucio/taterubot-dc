@@ -74,7 +74,7 @@ func (service *GreetingMessageCreator) Send() error {
 		chosenChannelIdToSendGreeting := ""
 		voiceChannelId := ""
 		for _, channel := range channels {
-			if channel.Type == discordgo.ChannelTypeGuildText {
+			if channel.Type == discordgo.ChannelTypeGuildText && chosenChannelIdToSendGreeting != "" {
 				chosenChannelIdToSendGreeting = channel.ID
 			}
 			if channel.Type == discordgo.ChannelTypeGuildVoice && channel.Name == service.channelName {
