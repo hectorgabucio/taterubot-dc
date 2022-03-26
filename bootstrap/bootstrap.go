@@ -7,6 +7,7 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/config"
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	mp3decoder "github.com/hectorgabucio/taterubot-dc/infrastructure/decoder"
+	discordwrapper "github.com/hectorgabucio/taterubot-dc/infrastructure/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
@@ -52,8 +53,10 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	fsRepo := localfs.NewRepository(cfg.BasePath)
 	decoder := mp3decoder.NewMP3Decoder()
 
+	discordClient := discordwrapper.NewClient(s)
+
 	// APPLICATION LAYER
-	greeting := application.NewGreetingMessageCreator(s, l, cfg.ChannelName)
+	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
 	voice := application.NewVoiceRecorder(s, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo)
 	embedAudioData := application.NewAddMetadataOnAudioSent(s, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, decoder, eventBus)
 	removeFiles := application.NewRemoveFilesWhenNotNeeded(fsRepo)
