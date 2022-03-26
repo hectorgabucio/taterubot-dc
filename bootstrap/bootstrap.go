@@ -57,7 +57,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
-	voice := application.NewVoiceRecorder(discordClient, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo, s)
+	voice := application.NewVoiceRecorder(discordClient, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo)
 	embedAudioData := application.NewAddMetadataOnAudioSent(discordClient, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, decoder, eventBus)
 	removeFiles := application.NewRemoveFilesWhenNotNeeded(fsRepo)
 

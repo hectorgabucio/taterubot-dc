@@ -3,6 +3,7 @@ package discordgo
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
+	"io"
 	"log"
 )
 
@@ -146,4 +147,23 @@ func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
 	err := discordGoConn.Disconnect()
 	close(voice.VoiceReceiver)
 	return err
+}
+
+func (c *Client) SendFileMessage(channelId string, name, contentType string, readable io.Reader) (discord.Message, error) {
+	sendComplex, err := c.session.ChannelMessageSendComplex(channelId, &discordgo.MessageSend{
+		Files: []*discordgo.File{
+			{
+				Name:        name,
+				ContentType: contentType,
+				Reader:      readable,
+			},
+		},
+	})
+	if err != nil {
+		return discord.Message{}, err
+	}
+	return discord.Message{
+		Id:        sendComplex.ID,
+		ChannelId: sendComplex.ChannelID,
+	}, nil
 }

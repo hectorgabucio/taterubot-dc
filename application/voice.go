@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
@@ -68,17 +67,15 @@ type VoiceRecorder struct {
 	discord              discord.Client
 	configChannelName    string
 	fsRepo               domain.FileRepository
-	session              *discordgo.Session
 }
 
-func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository, session *discordgo.Session) *VoiceRecorder {
+func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository) *VoiceRecorder {
 	return &VoiceRecorder{
 		lockedUserRepository: lockedUserRepository,
 		eventBus:             eventBus,
 		discord:              discord,
 		configChannelName:    configChannelName,
 		fsRepo:               fsRepo,
-		session:              session,
 	}
 }
 
@@ -210,11 +207,7 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 	}
 
 	reader := bufio.NewReader(file)
-	discFile := discordgo.File{
-		Name:        mp3FullName,
-		ContentType: "audio/mpeg",
-		Reader:      reader,
-	}
+
 	defer func(file *os.File) {
 		err := file.Close()
 		if err != nil {
@@ -222,18 +215,14 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 		}
 	}(file)
 
-	var discFiles []*discordgo.File
-	discFiles = append(discFiles, &discFile)
-	messageSent, err := usecase.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Files: discFiles,
-	})
+	messageSent, err := usecase.discord.SendFileMessage(chID, mp3FullName, "audio/mpeg", reader)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
 	events := []event.Event{
-		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelID, username, avatarUrl, mp3FullName, fileName),
+		domain.NewAudioSentEvent(messageSent.Id, messageSent.ChannelId, username, avatarUrl, mp3FullName, fileName),
 	}
 
 	go func() {

@@ -1,5 +1,7 @@
 package discord
 
+import "io"
+
 // ChannelType is the type of a Channel
 type ChannelType int
 
@@ -16,6 +18,7 @@ type Client interface {
 	GetChannel(channelId string) (Channel, error)
 	CreateChannel(guildID string, name string, channelType ChannelType, maxUsers int) (Channel, error)
 	SendTextMessage(channelId string, message string) error
+	SendFileMessage(channelId string, name, contentType string, readable io.Reader) (Message, error)
 	SetEmbed(channelId string, messageId string, embed MessageEmbed) error
 	JoinVoiceChannel(guildId, channelId string, mute, deaf bool) (voice *VoiceConnection, err error)
 	EndVoiceConnection(voice *VoiceConnection) error
@@ -30,6 +33,11 @@ type Channel struct {
 	Id   string
 	Name string
 	Type ChannelType
+}
+
+type Message struct {
+	Id        string
+	ChannelId string
 }
 
 type MessageEmbed struct {
@@ -59,11 +67,11 @@ type Packet struct {
 
 type VoiceConnection struct {
 	// TODO enhance this
-	Internals     interface{}
+	Internals     any
 	VoiceReceiver chan *Packet
 }
 
-func NewVoiceConnection(internals interface{}, voice chan *Packet) *VoiceConnection {
+func NewVoiceConnection(internals any, voice chan *Packet) *VoiceConnection {
 	return &VoiceConnection{
 		Internals:     internals,
 		VoiceReceiver: voice,
