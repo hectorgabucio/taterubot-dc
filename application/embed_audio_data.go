@@ -7,8 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/EdlinOrg/prominentcolor"
-	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
+	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	"image"
 	"io"
@@ -20,15 +20,15 @@ import (
 )
 
 type AddMetadataOnAudioSent struct {
-	session      *discordgo.Session
+	discord      discord.Client
 	durationText string
 	fsRepo       domain.FileRepository
 	decoder      domain.MP3Decoder
 	bus          event.Bus
 }
 
-func NewAddMetadataOnAudioSent(session *discordgo.Session, durationText string, fsRepo domain.FileRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
-	return &AddMetadataOnAudioSent{session: session, durationText: durationText, fsRepo: fsRepo, decoder: decoder, bus: bus}
+func NewAddMetadataOnAudioSent(discord discord.Client, durationText string, fsRepo domain.FileRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
+	return &AddMetadataOnAudioSent{discord: discord, durationText: durationText, fsRepo: fsRepo, decoder: decoder, bus: bus}
 }
 
 func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Event) error {
@@ -41,22 +41,20 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 	dominantColor := handler.getDominantAvatarColor(audioSentEvt.UserAvatarURL(), audioSentEvt.FileName())
 	t := handler.getDuration(audioSentEvt.Mp3Fullname())
 
-	embed := &discordgo.MessageEmbed{
+	newEmbed := discord.MessageEmbed{
 		Title:     audioSentEvt.Username(),
 		Timestamp: time.Now().Format(time.RFC3339),
 		Color:     dominantColor,
-		Thumbnail: &discordgo.MessageEmbedThumbnail{
-			URL: audioSentEvt.UserAvatarURL(),
-		},
-		Fields: []*discordgo.MessageEmbedField{
+		Thumbnail: audioSentEvt.UserAvatarURL(),
+		Fields: []*discord.MessageEmbedField{
 			{
-				Name:   handler.durationText,
-				Value:  formatSeconds(int(t)),
-				Inline: false,
+				Name:  handler.durationText,
+				Value: formatSeconds(int(t)),
 			},
 		},
 	}
-	_, err := handler.session.ChannelMessageEditEmbed(audioSentEvt.ChannelId(), audioSentEvt.AggregateID(), embed)
+
+	err := handler.discord.SetEmbed(audioSentEvt.ChannelId(), audioSentEvt.AggregateID(), newEmbed)
 	if err != nil {
 		log.Println(err)
 		return err

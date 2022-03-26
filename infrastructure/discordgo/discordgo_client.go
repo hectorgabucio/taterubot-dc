@@ -72,3 +72,28 @@ func (c *Client) SendTextMessage(channelId string, message string) error {
 	_, err := c.session.ChannelMessageSend(channelId, message)
 	return err
 }
+
+func (c *Client) SetEmbed(channelId string, messageId string, embed discord.MessageEmbed) error {
+	dgEmbed := &discordgo.MessageEmbed{
+
+		Title:     embed.Title,
+		Timestamp: embed.Timestamp,
+		Color:     embed.Color,
+		Thumbnail: &discordgo.MessageEmbedThumbnail{
+			URL: embed.Thumbnail,
+		},
+		Fields: []*discordgo.MessageEmbedField{},
+	}
+
+	for _, field := range embed.Fields {
+		dgEmbed.Fields = append(dgEmbed.Fields, &discordgo.MessageEmbedField{
+			Name:   field.Name,
+			Value:  field.Value,
+			Inline: false,
+		})
+	}
+
+	_, err := c.session.ChannelMessageEditEmbed(channelId, messageId, dgEmbed)
+
+	return err
+}
