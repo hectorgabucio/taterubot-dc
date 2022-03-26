@@ -11,16 +11,31 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
-	"github.com/kelseyhightower/envconfig"
+	"github.com/spf13/viper"
+	"log"
 )
 
 func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// CONFIG
-	var cfg config.Config
-	err := envconfig.Process("", &cfg)
+
+	viper.SetDefault("LANGUAGE", "en")
+	viper.SetDefault("CHANNEL_NAME", "TATERU")
+
+	viper.SetConfigFile(`config.json`)
+	viper.SetConfigType("json") // Look for specific type
+	err := viper.ReadInConfig()
 	if err != nil {
-		return err, nil, nil
+		log.Fatalln(err)
 	}
+	viper.AutomaticEnv()
+
+	var cfg config.Config
+	cfg.BotToken = viper.GetString("BOT_TOKEN")
+	cfg.Language = viper.GetString("LANGUAGE")
+	cfg.BasePath = viper.GetString("BASE_PATH")
+	cfg.ChannelName = viper.GetString("CHANNEL_NAME")
+
+	// LOCALIZATION
 	l := localizations.New(cfg.Language, "en")
 
 	// INFRASTRUCTURE
