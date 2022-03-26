@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain"
+	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	"github.com/pion/rtp"
@@ -64,18 +65,20 @@ func (h RecordingCommandHandler) Handle(ctx context.Context, cmd command.Command
 type VoiceRecorder struct {
 	lockedUserRepository domain.LockedUserRepository
 	eventBus             event.Bus
-	session              *discordgo.Session
+	discord              discord.Client
 	configChannelName    string
 	fsRepo               domain.FileRepository
+	session              *discordgo.Session
 }
 
-func NewVoiceRecorder(session *discordgo.Session, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository) *VoiceRecorder {
+func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository, session *discordgo.Session) *VoiceRecorder {
 	return &VoiceRecorder{
 		lockedUserRepository: lockedUserRepository,
 		eventBus:             eventBus,
-		session:              session,
+		discord:              discord,
 		configChannelName:    configChannelName,
 		fsRepo:               fsRepo,
+		session:              session,
 	}
 }
 
@@ -92,7 +95,7 @@ func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId s
 		return nil
 	}
 
-	channel, err := usecase.session.Channel(nowChannelId)
+	channel, err := usecase.discord.GetChannel(nowChannelId)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -106,7 +109,7 @@ func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId s
 }
 
 func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, username string, avatarUrl string, done chan bool) error {
-	v, err := usecase.session.ChannelVoiceJoin(guildId, channelId, true, false)
+	v, err := usecase.discord.JoinVoiceChannel(guildId, channelId, true, false)
 
 	if err != nil {
 		log.Println("failed to join voice channel:", err)
@@ -116,19 +119,17 @@ func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, us
 	go func() {
 		<-done
 		log.Println("done recording")
-		close(v.OpusRecv)
-		v.Close()
-		err := v.Disconnect()
+		err := usecase.discord.EndVoiceConnection(v)
 		if err != nil {
 			log.Println(err)
 		}
 
 	}()
-	usecase.handleVoice(v.OpusRecv, guildId, username, avatarUrl)
+	usecase.handleVoice(v.VoiceReceiver, guildId, username, avatarUrl)
 	return nil
 }
 
-func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, guildId string, username string, avatarUrl string) []string {
+func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string, username string, avatarUrl string) []string {
 	files := make(map[string]media.Writer)
 	for p := range c {
 		name := username + "-" + fmt.Sprintf("%d", p.SSRC)
@@ -142,7 +143,7 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, guildId stri
 			}
 			files[name] = file
 		}
-		// Construct pion RTP packet from DiscordGo's type.
+		// Construct pion RTP packet from discord's type.
 		rtpPacket := createPionRTPPacket(p)
 		err := file.WriteRTP(rtpPacket)
 		if err != nil {
@@ -176,15 +177,15 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discordgo.Packet, guildId stri
 }
 
 func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string, username string, avatarUrl string) {
-	channels, err := usecase.session.GuildChannels(guildId)
+	channels, err := usecase.discord.GetGuildChannels(guildId)
 	if err != nil {
 		return
 	}
 
 	var chID string
 	for _, ch := range channels {
-		if ch.Type == discordgo.ChannelTypeGuildText {
-			chID = ch.ID
+		if ch.Type == discord.ChannelTypeGuildText {
+			chID = ch.Id
 			break
 
 		}
@@ -252,7 +253,7 @@ func convertToMp3(input string, output string) error {
 	return err
 }
 
-func createPionRTPPacket(p *discordgo.Packet) *rtp.Packet {
+func createPionRTPPacket(p *discord.Packet) *rtp.Packet {
 	return &rtp.Packet{
 		Header: rtp.Header{
 			Version: 2,

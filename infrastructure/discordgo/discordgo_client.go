@@ -3,6 +3,7 @@ package discordgo
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
+	"log"
 )
 
 type Client struct {
@@ -53,6 +54,18 @@ func (c *Client) GetGuildChannels(guildID string) ([]discord.Channel, error) {
 
 	return mappedChannels, nil
 }
+func (c *Client) GetChannel(channelId string) (discord.Channel, error) {
+	channel, err := c.session.Channel(channelId)
+	if err != nil {
+		return discord.Channel{}, err
+	}
+	return discord.Channel{
+		Id:   channel.ID,
+		Name: channel.Name,
+		Type: discord.ChannelType(channel.Type),
+	}, nil
+}
+
 func (c *Client) CreateChannel(guildID string, name string, channelType discord.ChannelType, maxUsers int) (discord.Channel, error) {
 	createdChannel, err := c.session.GuildChannelCreateComplex(guildID, discordgo.GuildChannelCreateData{
 		Name:      name,
@@ -95,5 +108,42 @@ func (c *Client) SetEmbed(channelId string, messageId string, embed discord.Mess
 
 	_, err := c.session.ChannelMessageEditEmbed(channelId, messageId, dgEmbed)
 
+	return err
+}
+
+func (c *Client) JoinVoiceChannel(guildId, channelId string, mute, deaf bool) (voice *discord.VoiceConnection, err error) {
+	conn, err := c.session.ChannelVoiceJoin(guildId, channelId, mute, deaf)
+	if err != nil {
+		return nil, err
+	}
+
+	voiceRecv := make(chan *discord.Packet)
+	go func(voice chan *discordgo.Packet) {
+		for packet := range voice {
+			voiceRecv <- &discord.Packet{
+				SSRC:      packet.SSRC,
+				Sequence:  packet.Sequence,
+				Timestamp: packet.Timestamp,
+				Type:      packet.Type,
+				Opus:      packet.Opus,
+				PCM:       packet.PCM,
+			}
+		}
+	}(conn.OpusRecv)
+	domainConn := discord.NewVoiceConnection(conn, voiceRecv)
+
+	return domainConn, nil
+
+}
+
+func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
+	discordGoConn, ok := voice.Internals.(*discordgo.VoiceConnection)
+	if !ok {
+		log.Fatalln("couldnt cast to discordgo conn")
+	}
+	close(discordGoConn.OpusRecv)
+	discordGoConn.Close()
+	err := discordGoConn.Disconnect()
+	close(voice.VoiceReceiver)
 	return err
 }
