@@ -159,10 +159,7 @@ func (handler *AddMetadataOnAudioSent) getDuration(fileName string) float64 {
 		return 0
 	}
 	defer func(file *os.File) {
-		err := file.Close()
-		if err != nil {
-			log.Println(err)
-		}
+		_ = file.Close()
 	}(file1)
 
 	duration := handler.decoder.GetDuration(file1)

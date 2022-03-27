@@ -1,36 +1,31 @@
 package mp3decoder
 
 import (
-	"github.com/tcolgate/mp3"
-	"io"
+	"github.com/faiface/beep"
+	"github.com/faiface/beep/mp3"
+	_ "github.com/faiface/beep/mp3"
 	"log"
 	"os"
+	"time"
 )
 
 type MP3Decoder struct {
 }
 
 func (M MP3Decoder) GetDuration(file *os.File) float64 {
-
-	d := mp3.NewDecoder(file)
-	var f mp3.Frame
-	skipped := 0
-
-	var t float64
-	for {
-
-		if err := d.Decode(&f, &skipped); err != nil {
-			if err == io.EOF {
-				break
-			}
-			log.Println(err)
-			return 0
-		}
-
-		t = t + f.Duration().Seconds()
+	streamer, format, err := mp3.Decode(file)
+	if err != nil {
+		log.Fatal(err)
 	}
-
-	return t
+	defer func(streamer beep.StreamSeekCloser) {
+		err := streamer.Close()
+		if err != nil {
+			log.Println("err closing audio file", err)
+		}
+	}(streamer)
+	length := format.SampleRate.D(streamer.Len())
+	nTime := length.Round(time.Millisecond).Seconds()
+	return nTime
 }
 
 func NewMP3Decoder() *MP3Decoder {
