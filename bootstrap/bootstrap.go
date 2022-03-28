@@ -10,6 +10,7 @@ import (
 	discordwrapper "github.com/hectorgabucio/taterubot-dc/infrastructure/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
+	"github.com/hectorgabucio/taterubot-dc/infrastructure/pion"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/spf13/viper"
@@ -54,10 +55,11 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	decoder := mp3decoder.NewMP3Decoder()
 
 	discordClient := discordwrapper.NewClient(s)
+	oggWriter := &pion.PionWriter{}
 
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
-	voice := application.NewVoiceRecorder(discordClient, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo)
+	voice := application.NewVoiceRecorder(discordClient, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo, oggWriter)
 	embedAudioData := application.NewAddMetadataOnAudioSent(discordClient, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, decoder, eventBus)
 	removeFiles := application.NewRemoveFilesWhenNotNeeded(fsRepo)
 

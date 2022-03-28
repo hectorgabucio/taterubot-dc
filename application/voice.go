@@ -7,11 +7,10 @@ import (
 	"fmt"
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
+	"github.com/hectorgabucio/taterubot-dc/domain/ogg"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
-	"github.com/pion/rtp"
-	"github.com/pion/webrtc/v3/pkg/media"
-	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -67,15 +66,17 @@ type VoiceRecorder struct {
 	discord              discord.Client
 	configChannelName    string
 	fsRepo               domain.FileRepository
+	oggWriter            ogg.Writer
 }
 
-func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository) *VoiceRecorder {
+func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUserRepository domain.LockedUserRepository, eventBus event.Bus, fsRepo domain.FileRepository, writer ogg.Writer) *VoiceRecorder {
 	return &VoiceRecorder{
 		lockedUserRepository: lockedUserRepository,
 		eventBus:             eventBus,
 		discord:              discord,
 		configChannelName:    configChannelName,
 		fsRepo:               fsRepo,
+		oggWriter:            writer,
 	}
 }
 
@@ -127,22 +128,20 @@ func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, us
 }
 
 func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string, username string, avatarUrl string) []string {
-	files := make(map[string]media.Writer)
+	files := make(map[string]io.Closer)
 	for p := range c {
 		name := username + "-" + fmt.Sprintf("%d", p.SSRC)
 		file, ok := files[name]
 		if !ok {
 			var err error
-			file, err = oggwriter.New(usecase.fsRepo.GetFullPath(fmt.Sprintf("%s.ogg", name)), 48000, 2)
+			file, err = usecase.oggWriter.NewWriter(usecase.fsRepo.GetFullPath(fmt.Sprintf("%s.ogg", name)))
 			if err != nil {
 				log.Printf("failed to create file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 				return nil
 			}
 			files[name] = file
 		}
-		// Construct pion RTP packet from discord's type.
-		rtpPacket := createPionRTPPacket(p)
-		err := file.WriteRTP(rtpPacket)
+		err := usecase.oggWriter.WriteVoice(file, p)
 		if err != nil {
 			log.Printf("failed to write to file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 		}
@@ -240,18 +239,4 @@ func convertToMp3(input string, output string) error {
 	err := cmd.Run()
 
 	return err
-}
-
-func createPionRTPPacket(p *discord.Packet) *rtp.Packet {
-	return &rtp.Packet{
-		Header: rtp.Header{
-			Version: 2,
-			// Taken from Discord voice docs
-			PayloadType:    0x78,
-			SequenceNumber: p.Sequence,
-			Timestamp:      p.Timestamp,
-			SSRC:           p.SSRC,
-		},
-		Payload: p.Opus,
-	}
 }
