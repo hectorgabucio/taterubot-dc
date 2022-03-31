@@ -29,7 +29,6 @@ func NewServer(ctx context.Context, session *discordgo.Session, commandBus comma
 func (server *Server) registerHandlers() {
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is ready")
-
 		go func() {
 			err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
 			if err != nil {
@@ -46,6 +45,14 @@ func (server *Server) registerHandlers() {
 		if user.Bot {
 			return
 		}
+
+		if r.BeforeUpdate != nil {
+			// to avoid messing with muting and unmuting
+			if (r.SelfMute == true && r.BeforeUpdate.SelfMute == false) || (r.SelfMute == false && r.BeforeUpdate.SelfMute == true) {
+				return
+			}
+		}
+
 		go func() {
 			err := server.commandBus.Dispatch(context.Background(), application.NewRecordingCommand(r.UserID, r.ChannelID, r.GuildID, user.Username, user.AvatarURL("")))
 			if err != nil {

@@ -8,6 +8,7 @@
 - better CI  
 - tests
 - queues in postgre/amqp
+- better directory structure to localization
 
 # Frozen
 - progress of audio recording and status monitoring, avisa al usuario si el audio no se esta guardando bien...
