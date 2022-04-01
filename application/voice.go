@@ -10,10 +10,10 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/domain/ogg"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
+	ffmpeg "github.com/u2takey/ffmpeg-go"
 	"io"
 	"log"
 	"os"
-	"os/exec"
 )
 
 const RecordingCommandType command.Type = "command.recording"
@@ -234,9 +234,8 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 }
 
 func convertToMp3(input string, output string) error {
-	cmd := exec.Command("ffmpeg", "-y", "-i", input, output)
+	return ffmpeg.Input(input).
+		Output(output, ffmpeg.KwArgs{"acodec": "libmp3lame", "b:a": "96k", "map": "a"}).
+		OverWriteOutput().ErrorToStdOut().Run()
 
-	err := cmd.Run()
-
-	return err
 }

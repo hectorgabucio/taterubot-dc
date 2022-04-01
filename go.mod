@@ -14,10 +14,12 @@ require (
 )
 
 require (
+	github.com/aws/aws-sdk-go v1.38.20 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/hajimehoshi/go-mp3 v0.3.2 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/magiconair/properties v1.8.5 // indirect
 	github.com/mitchellh/mapstructure v1.4.3 // indirect
@@ -31,6 +33,8 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
+	github.com/u2takey/ffmpeg-go v0.4.1 // indirect
+	github.com/u2takey/go-utils v0.3.1 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
 	golang.org/x/text v0.3.7 // indirect
