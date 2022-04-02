@@ -36,11 +36,11 @@ func NewGreetingCommandHandler(service *GreetingMessageCreator) GreetingCommandH
 
 // Handle implements the command.Handler interface.
 func (h GreetingCommandHandler) Handle(ctx context.Context, cmd command.Command) error {
-	cmd, ok := cmd.(GreetingCommand)
+	_, ok := cmd.(GreetingCommand)
 	if !ok {
 		return errors.New("unexpected command")
 	}
-	return h.service.Send()
+	return h.service.send()
 }
 
 type GreetingMessageCreator struct {
@@ -57,7 +57,7 @@ func NewGreetingMessageCreator(discord discord.Client, localization *localizatio
 	}
 }
 
-func (service *GreetingMessageCreator) Send() error {
+func (service *GreetingMessageCreator) send() error {
 	guilds, err := service.discordClient.GetGuilds()
 	if err != nil {
 		log.Println(err)

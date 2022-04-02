@@ -57,7 +57,7 @@ func (h RecordingCommandHandler) Handle(ctx context.Context, cmd command.Command
 	if !ok {
 		return errors.New("unexpected command")
 	}
-	return h.service.HandleVoiceRecording(recordingCmd.UserId, recordingCmd.CurrentChannelId, recordingCmd.GuildId, recordingCmd.Username, recordingCmd.AvatarUrl)
+	return h.service.handleVoiceRecording(recordingCmd.UserId, recordingCmd.CurrentChannelId, recordingCmd.GuildId, recordingCmd.Username, recordingCmd.AvatarUrl)
 }
 
 type VoiceRecorder struct {
@@ -80,7 +80,7 @@ func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUs
 	}
 }
 
-func (usecase *VoiceRecorder) HandleVoiceRecording(userId string, nowChannelId string, guildID string, username string, avatarUrl string) error {
+func (usecase *VoiceRecorder) handleVoiceRecording(userId string, nowChannelId string, guildID string, username string, avatarUrl string) error {
 
 	currentLockedUser, done := usecase.lockedUserRepository.GetCurrentLock(guildID)
 
