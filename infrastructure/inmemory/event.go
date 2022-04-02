@@ -24,7 +24,6 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 		if !ok {
 			return nil
 		}
-
 		for _, handler := range handlers {
 			err := handler.Handle(ctx, evt)
 			if err != nil {
@@ -40,7 +39,7 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 func (b *EventBus) Subscribe(evtType event.Type, handler event.Handler) {
 	_, ok := b.handlers[evtType]
 	if !ok {
-		b.handlers[evtType] = []event.Handler{handler}
+		b.handlers[evtType] = []event.Handler{}
 	}
 
 	b.handlers[evtType] = append(b.handlers[evtType], handler)

@@ -79,20 +79,20 @@ func (handler *AddMetadataOnAudioSent) getDominantAvatarColor(url string, fileNa
 		return 0
 	}
 	return color
-
 }
 
 func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, error) {
 	// Step 1: Load the image
 	img, err := handler.loadImage(fmt.Sprintf("%s.png", fileName))
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Failed to load image: %v", err))
+		return 0, fmt.Errorf("failed to load image: %v", err)
+
 	}
 
 	// Step 2: Process it
 	colours, err := prominentcolor.Kmeans(img)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Failed to process image: %v", err))
+		return 0, fmt.Errorf("failed to process image: %v", err)
 	}
 
 	for _, colour := range colours {
@@ -118,7 +118,6 @@ func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image,
 }
 
 func (handler *AddMetadataOnAudioSent) downloadFile(URL, fileName string) error {
-	//Get the response bytes from the url
 	response, err := http.Get(URL)
 	if err != nil {
 		return err
@@ -143,8 +142,6 @@ func (handler *AddMetadataOnAudioSent) downloadFile(URL, fileName string) error 
 			log.Println("error closing file", err)
 		}
 	}(file)
-
-	//Write the bytes to the field
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
 		return err

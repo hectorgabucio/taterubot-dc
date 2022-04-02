@@ -65,28 +65,28 @@ func (service *GreetingMessageCreator) send() error {
 	}
 	botUsername := service.discordClient.GetBotUsername()
 	for _, guild := range guilds {
-		channels, err := service.discordClient.GetGuildChannels(guild.Id)
+		channels, err := service.discordClient.GetGuildChannels(guild.ID)
 		if err != nil {
 			log.Println(err)
 			return err
 		}
 
-		chosenChannelIdToSendGreeting := ""
+		chosenChannelIDToSendGreeting := ""
 		voiceChannelId := ""
 		for _, channel := range channels {
-			if channel.Type == discord.ChannelTypeGuildText && chosenChannelIdToSendGreeting == "" {
-				chosenChannelIdToSendGreeting = channel.Id
+			if channel.Type == discord.ChannelTypeGuildText && chosenChannelIDToSendGreeting == "" {
+				chosenChannelIDToSendGreeting = channel.ID
 			}
 			if channel.Type == discord.ChannelTypeGuildVoice && channel.Name == service.channelName {
-				voiceChannelId = channel.Id
+				voiceChannelId = channel.ID
 			}
 		}
 
 		// if no voice channel found, try to create it if possible
 		if voiceChannelId == "" {
-			createdChannel, err := service.discordClient.CreateChannel(guild.Id, service.channelName, discord.ChannelTypeGuildVoice, 2)
+			createdChannel, err := service.discordClient.CreateChannel(guild.ID, service.channelName, discord.ChannelTypeGuildVoice, 2)
 			if err == nil {
-				voiceChannelId = createdChannel.Id
+				voiceChannelId = createdChannel.ID
 			}
 		}
 
@@ -95,7 +95,7 @@ func (service *GreetingMessageCreator) send() error {
 			voiceChannelReplacement = service.channelName
 		}
 		greetingMessage := service.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": voiceChannelReplacement, "botName": botUsername})
-		err = service.discordClient.SendTextMessage(chosenChannelIdToSendGreeting, greetingMessage)
+		err = service.discordClient.SendTextMessage(chosenChannelIDToSendGreeting, greetingMessage)
 		if err != nil {
 			log.Println(err)
 			return err

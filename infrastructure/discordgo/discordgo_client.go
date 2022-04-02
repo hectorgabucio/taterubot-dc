@@ -25,7 +25,7 @@ func (c *Client) GetGuilds() ([]discord.Guild, error) {
 	// TODO create a map function
 	for _, infraGuild := range infraGuilds {
 		newGuild := discord.Guild{
-			Id:   infraGuild.ID,
+			ID:   infraGuild.ID,
 			Name: infraGuild.Name,
 		}
 		guilds = append(guilds, newGuild)
@@ -46,7 +46,7 @@ func (c *Client) GetGuildChannels(guildID string) ([]discord.Channel, error) {
 	var mappedChannels []discord.Channel
 	for _, infraChannel := range channels {
 		newChannel := discord.Channel{
-			Id:   infraChannel.ID,
+			ID:   infraChannel.ID,
 			Name: infraChannel.Name,
 			Type: discord.ChannelType(infraChannel.Type),
 		}
@@ -61,7 +61,7 @@ func (c *Client) GetChannel(channelId string) (discord.Channel, error) {
 		return discord.Channel{}, err
 	}
 	return discord.Channel{
-		Id:   channel.ID,
+		ID:   channel.ID,
 		Name: channel.Name,
 		Type: discord.ChannelType(channel.Type),
 	}, nil
@@ -77,7 +77,7 @@ func (c *Client) CreateChannel(guildID string, name string, channelType discord.
 		return discord.Channel{}, err
 	}
 	return discord.Channel{
-		Id:   createdChannel.ID,
+		ID:   createdChannel.ID,
 		Name: createdChannel.Name,
 		Type: discord.ChannelType(createdChannel.Type),
 	}, nil
@@ -163,7 +163,7 @@ func (c *Client) SendFileMessage(channelId string, name, contentType string, rea
 		return discord.Message{}, err
 	}
 	return discord.Message{
-		Id:        sendComplex.ID,
+		ID:        sendComplex.ID,
 		ChannelId: sendComplex.ChannelID,
 	}, nil
 }

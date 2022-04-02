@@ -19,20 +19,20 @@ import (
 const RecordingCommandType command.Type = "command.recording"
 
 type RecordingCommand struct {
-	UserId           string
-	CurrentChannelId string
-	GuildId          string
+	UserID           string
+	CurrentChannelID string
+	GuildID          string
 	Username         string
-	AvatarUrl        string
+	AvatarURL        string
 }
 
-func NewRecordingCommand(userId string, channelId string, guildId string, username string, avatarUrl string) RecordingCommand {
+func NewRecordingCommand(userID string, channelID string, guildID string, username string, avatarUrl string) RecordingCommand {
 	return RecordingCommand{
-		UserId:           userId,
-		CurrentChannelId: channelId,
-		GuildId:          guildId,
+		UserID:           userID,
+		CurrentChannelID: channelID,
+		GuildID:          guildID,
 		Username:         username,
-		AvatarUrl:        avatarUrl,
+		AvatarURL:        avatarUrl,
 	}
 }
 
@@ -57,7 +57,7 @@ func (h RecordingCommandHandler) Handle(ctx context.Context, cmd command.Command
 	if !ok {
 		return errors.New("unexpected command")
 	}
-	return h.service.handleVoiceRecording(recordingCmd.UserId, recordingCmd.CurrentChannelId, recordingCmd.GuildId, recordingCmd.Username, recordingCmd.AvatarUrl)
+	return h.service.handleVoiceRecording(recordingCmd.UserID, recordingCmd.CurrentChannelID, recordingCmd.GuildID, recordingCmd.Username, recordingCmd.AvatarURL)
 }
 
 type VoiceRecorder struct {
@@ -80,20 +80,20 @@ func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUs
 	}
 }
 
-func (usecase *VoiceRecorder) handleVoiceRecording(userId string, nowChannelId string, guildID string, username string, avatarUrl string) error {
+func (usecase *VoiceRecorder) handleVoiceRecording(userID string, nowChannelID string, guildID string, username string, avatarUrl string) error {
 
 	currentLockedUser, done := usecase.lockedUserRepository.GetCurrentLock(guildID)
 
-	if nowChannelId == "" && currentLockedUser != userId {
+	if nowChannelID == "" && currentLockedUser != userID {
 		return nil
 	}
-	if currentLockedUser == userId {
+	if currentLockedUser == userID {
 		done <- true
 		usecase.lockedUserRepository.ReleaseUserLock(guildID)
 		return nil
 	}
 
-	channel, err := usecase.discord.GetChannel(nowChannelId)
+	channel, err := usecase.discord.GetChannel(nowChannelID)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -102,12 +102,12 @@ func (usecase *VoiceRecorder) handleVoiceRecording(userId string, nowChannelId s
 		return nil
 	}
 
-	usecase.lockedUserRepository.SetLock(guildID, userId)
-	return usecase.recordAndSend(guildID, nowChannelId, username, avatarUrl, done)
+	usecase.lockedUserRepository.SetLock(guildID, userID)
+	return usecase.recordAndSend(guildID, nowChannelID, username, avatarUrl, done)
 }
 
-func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, username string, avatarUrl string, done chan bool) error {
-	v, err := usecase.discord.JoinVoiceChannel(guildId, channelId, true, false)
+func (usecase *VoiceRecorder) recordAndSend(guildID string, channelID string, username string, avatarUrl string, done chan bool) error {
+	v, err := usecase.discord.JoinVoiceChannel(guildID, channelID, true, false)
 
 	if err != nil {
 		log.Println("failed to join voice channel:", err)
@@ -121,13 +121,12 @@ func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, us
 		if err != nil {
 			log.Println(err)
 		}
-
 	}()
-	usecase.handleVoice(v.VoiceReceiver, guildId, username, avatarUrl)
+	usecase.handleVoice(v.VoiceReceiver, guildID, username, avatarUrl)
 	return nil
 }
 
-func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string, username string, avatarUrl string) []string {
+func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildID string, username string, avatarUrl string) []string {
 	files := make(map[string]io.Closer)
 	for p := range c {
 		name := username + "-" + fmt.Sprintf("%d", p.SSRC)
@@ -166,10 +165,9 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string
 	}
 
 	// TODO event recording file created
-	usecase.sendAudioFiles(guildId, mp3Names, username, avatarUrl)
+	usecase.sendAudioFiles(guildID, mp3Names, username, avatarUrl)
 
 	return mp3Names
-
 }
 
 func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string, username string, avatarUrl string) {
@@ -181,7 +179,7 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string,
 	var chID string
 	for _, ch := range channels {
 		if ch.Type == discord.ChannelTypeGuildText {
-			chID = ch.Id
+			chID = ch.ID
 			break
 
 		}
@@ -221,7 +219,7 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 	}
 
 	events := []event.Event{
-		domain.NewAudioSentEvent(messageSent.Id, messageSent.ChannelId, username, avatarUrl, mp3FullName, fileName),
+		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelId, username, avatarUrl, mp3FullName, fileName),
 	}
 
 	go func() {
