@@ -2,10 +2,10 @@ package discord
 
 import "io"
 
-// ChannelType is the type of a Channel
+// ChannelType is the type of a Channel.
 type ChannelType int
 
-// Block contains known ChannelType values
+// Block contains known ChannelType values.
 const (
 	ChannelTypeGuildText  ChannelType = 0
 	ChannelTypeGuildVoice ChannelType = 2
@@ -37,7 +37,7 @@ type Channel struct {
 
 type Message struct {
 	ID        string
-	ChannelId string
+	ChannelID string
 }
 
 type MessageEmbed struct {

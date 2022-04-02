@@ -1,7 +1,6 @@
 package application
 
-// TODO create image infra service
-// TODO create mp3 infra service
+// TODO create image infra service.
 import (
 	"context"
 	"errors"
@@ -85,14 +84,13 @@ func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, err
 	// Step 1: Load the image
 	img, err := handler.loadImage(fmt.Sprintf("%s.png", fileName))
 	if err != nil {
-		return 0, fmt.Errorf("failed to load image: %v", err)
-
+		return 0, fmt.Errorf("failed to load image: %w", err)
 	}
 
 	// Step 2: Process it
 	colours, err := prominentcolor.Kmeans(img)
 	if err != nil {
-		return 0, fmt.Errorf("failed to process image: %v", err)
+		return 0, fmt.Errorf("failed to process image: %w", err)
 	}
 
 	for _, colour := range colours {
@@ -117,8 +115,8 @@ func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image,
 	return img, err
 }
 
-func (handler *AddMetadataOnAudioSent) downloadFile(URL, fileName string) error {
-	response, err := http.Get(URL)
+func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error {
+	response, err := http.Get(url)
 	if err != nil {
 		return err
 	}

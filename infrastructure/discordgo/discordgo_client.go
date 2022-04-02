@@ -31,7 +31,6 @@ func (c *Client) GetGuilds() ([]discord.Guild, error) {
 		guilds = append(guilds, newGuild)
 	}
 	return guilds, nil
-
 }
 
 func (c *Client) GetBotUsername() string {
@@ -55,8 +54,8 @@ func (c *Client) GetGuildChannels(guildID string) ([]discord.Channel, error) {
 
 	return mappedChannels, nil
 }
-func (c *Client) GetChannel(channelId string) (discord.Channel, error) {
-	channel, err := c.session.Channel(channelId)
+func (c *Client) GetChannel(channelID string) (discord.Channel, error) {
+	channel, err := c.session.Channel(channelID)
 	if err != nil {
 		return discord.Channel{}, err
 	}
@@ -82,12 +81,12 @@ func (c *Client) CreateChannel(guildID string, name string, channelType discord.
 		Type: discord.ChannelType(createdChannel.Type),
 	}, nil
 }
-func (c *Client) SendTextMessage(channelId string, message string) error {
-	_, err := c.session.ChannelMessageSend(channelId, message)
+func (c *Client) SendTextMessage(channelID string, message string) error {
+	_, err := c.session.ChannelMessageSend(channelID, message)
 	return err
 }
 
-func (c *Client) SetEmbed(channelId string, messageId string, embed discord.MessageEmbed) error {
+func (c *Client) SetEmbed(channelID string, messageId string, embed discord.MessageEmbed) error {
 	dgEmbed := &discordgo.MessageEmbed{
 
 		Title:     embed.Title,
@@ -107,7 +106,7 @@ func (c *Client) SetEmbed(channelId string, messageId string, embed discord.Mess
 		})
 	}
 
-	_, err := c.session.ChannelMessageEditEmbed(channelId, messageId, dgEmbed)
+	_, err := c.session.ChannelMessageEditEmbed(channelID, messageId, dgEmbed)
 
 	return err
 }
@@ -164,6 +163,6 @@ func (c *Client) SendFileMessage(channelId string, name, contentType string, rea
 	}
 	return discord.Message{
 		ID:        sendComplex.ID,
-		ChannelId: sendComplex.ChannelID,
+		ChannelID: sendComplex.ChannelID,
 	}, nil
 }
