@@ -141,14 +141,19 @@ func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (v
 }
 
 func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
+	// TODO only solution i see to race condition in discordgo lib
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("recovered", r)
+		}
+	}()
 	discordGoConn, ok := voice.Internals.(*discordgo.VoiceConnection)
 	if !ok {
 		log.Fatalln("couldnt cast to discordgo conn")
 	}
-	close(discordGoConn.OpusRecv)
-	discordGoConn.Close()
-	err := discordGoConn.Disconnect()
 	close(voice.VoiceReceiver)
+	close(discordGoConn.OpusRecv)
+	err := discordGoConn.Disconnect()
 	if err != nil {
 		return fmt.Errorf("err disconnecting discord voice conn, %w", err)
 	}
