@@ -26,8 +26,7 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 
 	viper.SetConfigFile(`config.json`)
 	viper.SetConfigType("json") // Look for specific type
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln(err)
 	}
 	viper.AutomaticEnv()
