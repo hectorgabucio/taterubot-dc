@@ -17,7 +17,7 @@ import (
 	"log"
 )
 
-func createServerAndDependencies() (error, context.Context, *server.Server) {
+func createServerAndDependencies() (context.Context, *server.Server, error) {
 	// CONFIG
 
 	viper.SetDefault("LANGUAGE", "en")
@@ -43,7 +43,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// INFRASTRUCTURE
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
@@ -75,11 +75,11 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	commandBus.Register(application.RecordingCommandType, voiceCommandHandler)
 
 	ctx, srv := server.NewServer(context.Background(), s, commandBus)
-	return nil, ctx, &srv
+	return ctx, &srv, nil
 }
 
 func Run() error {
-	err, ctx, srv := createServerAndDependencies()
+	ctx, srv, err := createServerAndDependencies()
 	if err != nil {
 		return err
 	}
