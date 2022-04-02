@@ -146,8 +146,8 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildID string
 
 	log.Println("done listening voice")
 
-	// Once we made it here, we're done listening for packets. Close all files
-	var mp3Names []string
+	mp3Names := make([]string, len(files))
+	i := 0
 	for fileName, f := range files {
 		err := f.Close()
 		if err != nil {
@@ -159,7 +159,8 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildID string
 			log.Println(err)
 			return nil
 		}
-		mp3Names = append(mp3Names, fileName)
+		mp3Names[i] = fileName
+		i++
 	}
 
 	// TODO event recording file created
@@ -178,6 +179,7 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildID string, fileNames []string,
 	for _, ch := range channels {
 		if ch.Type == discord.ChannelTypeGuildText {
 			chID = ch.ID
+
 			break
 		}
 	}
@@ -225,7 +227,10 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 	}()
 }
 func convertToMp3(input string, output string) error {
-	return ffmpeg.Input(input).
+	if err := ffmpeg.Input(input).
 		Output(output, ffmpeg.KwArgs{"acodec": "libmp3lame", "b:a": "96k", "map": "a"}).
-		OverWriteOutput().ErrorToStdOut().Run()
+		OverWriteOutput().ErrorToStdOut().Run(); err != nil {
+		return fmt.Errorf("failed to convert to mp3, %w", err)
+	}
+	return nil
 }

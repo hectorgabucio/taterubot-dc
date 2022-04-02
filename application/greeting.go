@@ -36,8 +36,7 @@ func NewGreetingCommandHandler(service *GreetingMessageCreator) GreetingCommandH
 
 // Handle implements the command.Handler interface.
 func (h GreetingCommandHandler) Handle(ctx context.Context, cmd command.Command) error {
-	_, ok := cmd.(GreetingCommand)
-	if !ok {
+	if _, ok := cmd.(GreetingCommand); !ok {
 		return errors.New("unexpected command")
 	}
 	return h.service.send()
@@ -72,26 +71,26 @@ func (service *GreetingMessageCreator) send() error {
 		}
 
 		chosenChannelIDToSendGreeting := ""
-		voiceChannelId := ""
+		voiceChannelID := ""
 		for _, channel := range channels {
 			if channel.Type == discord.ChannelTypeGuildText && chosenChannelIDToSendGreeting == "" {
 				chosenChannelIDToSendGreeting = channel.ID
 			}
 			if channel.Type == discord.ChannelTypeGuildVoice && channel.Name == service.channelName {
-				voiceChannelId = channel.ID
+				voiceChannelID = channel.ID
 			}
 		}
 
 		// if no voice channel found, try to create it if possible
-		if voiceChannelId == "" {
+		if voiceChannelID == "" {
 			createdChannel, err := service.discordClient.CreateChannel(guild.ID, service.channelName, discord.ChannelTypeGuildVoice, 2)
 			if err == nil {
-				voiceChannelId = createdChannel.ID
+				voiceChannelID = createdChannel.ID
 			}
 		}
 
-		voiceChannelReplacement := fmt.Sprintf("<#%s>", voiceChannelId)
-		if voiceChannelId == "" {
+		voiceChannelReplacement := fmt.Sprintf("<#%s>", voiceChannelID)
+		if voiceChannelID == "" {
 			voiceChannelReplacement = service.channelName
 		}
 		greetingMessage := service.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": voiceChannelReplacement, "botName": botUsername})
@@ -100,6 +99,7 @@ func (service *GreetingMessageCreator) send() error {
 			log.Println(err)
 			return err
 		}
+
 		break
 	}
 	return nil

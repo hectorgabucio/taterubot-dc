@@ -53,7 +53,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 		},
 	}
 
-	err := handler.discord.SetEmbed(audioSentEvt.ChannelId(), audioSentEvt.AggregateID(), newEmbed)
+	err := handler.discord.SetEmbed(audioSentEvt.ChannelID(), audioSentEvt.AggregateID(), newEmbed)
 	if err != nil {
 		log.Println(err)
 		return err
@@ -118,7 +118,7 @@ func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image,
 func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error {
 	response, err := http.Get(url)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to download file, %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -132,7 +132,7 @@ func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error 
 	}
 	file, err := handler.fsRepo.CreateEmpty(fileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create empty file to write response, %w", err)
 	}
 	defer func(file *os.File) {
 		err := file.Close()
@@ -142,7 +142,7 @@ func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error 
 	}(file)
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to copy response body to file, %w", err)
 	}
 
 	return nil
