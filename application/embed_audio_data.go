@@ -56,7 +56,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 	err := handler.discord.SetEmbed(audioSentEvt.ChannelID(), audioSentEvt.AggregateID(), newEmbed)
 	if err != nil {
 		log.Println(err)
-		return err
+		return fmt.Errorf("err setting embed in message, %w", err)
 	}
 	go func() {
 		err := handler.bus.Publish(ctx, []event.Event{domain.NewDoneProcessingFilesEvent(audioSentEvt.FileName())})
@@ -103,7 +103,7 @@ func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, err
 func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image, error) {
 	f, err := handler.fsRepo.Open(fileInput)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("err opening image file, %w", err)
 	}
 	defer func(f *os.File) {
 		err := f.Close()
@@ -112,7 +112,7 @@ func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image,
 		}
 	}(f)
 	img, _, err := image.Decode(f)
-	return img, err
+	return img, fmt.Errorf("err decoding image, %w", err)
 }
 
 func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error {

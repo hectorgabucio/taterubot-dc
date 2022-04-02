@@ -5,7 +5,7 @@ import "os"
 type LockedUserRepository interface {
 	GetCurrentLock(guildID string) (string, chan bool)
 	ReleaseUserLock(guildID string)
-	SetLock(guildID string, userId string)
+	SetLock(guildID string, userID string)
 }
 
 type FileRepository interface {

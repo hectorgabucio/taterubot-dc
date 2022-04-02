@@ -60,14 +60,14 @@ func (service *GreetingMessageCreator) send() error {
 	guilds, err := service.discordClient.GetGuilds()
 	if err != nil {
 		log.Println(err)
-		return err
+		return fmt.Errorf("err getting guilds, %w", err)
 	}
 	botUsername := service.discordClient.GetBotUsername()
 	for _, guild := range guilds {
 		channels, err := service.discordClient.GetGuildChannels(guild.ID)
 		if err != nil {
 			log.Println(err)
-			return err
+			return fmt.Errorf("err getting guild channels, %w", err)
 		}
 
 		chosenChannelIDToSendGreeting := ""
@@ -97,7 +97,7 @@ func (service *GreetingMessageCreator) send() error {
 		err = service.discordClient.SendTextMessage(chosenChannelIDToSendGreeting, greetingMessage)
 		if err != nil {
 			log.Println(err)
-			return err
+			return fmt.Errorf("err sending message text, %w", err)
 		}
 
 		break

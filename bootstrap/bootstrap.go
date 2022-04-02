@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/application"
 	"github.com/hectorgabucio/taterubot-dc/config"
@@ -43,7 +44,7 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 	// INFRASTRUCTURE
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("error getting new bot client, %w", err)
 	}
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
@@ -55,7 +56,7 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 	decoder := mp3decoder.NewMP3Decoder()
 
 	discordClient := discordwrapper.NewClient(s)
-	oggWriter := &pion.PionWriter{}
+	oggWriter := &pion.Writer{}
 
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
@@ -83,5 +84,8 @@ func Run() error {
 	if err != nil {
 		return err
 	}
-	return srv.Run(ctx)
+	if err = srv.Run(ctx); err != nil {
+		return fmt.Errorf("err running server, %w", err)
+	}
+	return nil
 }

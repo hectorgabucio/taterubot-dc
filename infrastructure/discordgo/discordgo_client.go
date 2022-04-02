@@ -1,6 +1,7 @@
 package discordgo
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"io"
@@ -18,7 +19,7 @@ func NewClient(session *discordgo.Session) *Client {
 func (c *Client) GetGuilds() ([]discord.Guild, error) {
 	infraGuilds, err := c.session.UserGuilds(100, "", "")
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("err getting user guilds, %w", err)
 	}
 
 	guilds := make([]discord.Guild, len(infraGuilds))
@@ -41,7 +42,7 @@ func (c *Client) GetBotUsername() string {
 func (c *Client) GetGuildChannels(guildID string) ([]discord.Channel, error) {
 	channels, err := c.session.GuildChannels(guildID)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("err getting guild channels, %w", err)
 	}
 	mappedChannels := make([]discord.Channel, len(channels))
 	for i, infraChannel := range channels {
@@ -58,7 +59,7 @@ func (c *Client) GetGuildChannels(guildID string) ([]discord.Channel, error) {
 func (c *Client) GetChannel(channelID string) (discord.Channel, error) {
 	channel, err := c.session.Channel(channelID)
 	if err != nil {
-		return discord.Channel{}, err
+		return discord.Channel{}, fmt.Errorf("err getting channel, %w", err)
 	}
 	return discord.Channel{
 		ID:   channel.ID,
@@ -74,7 +75,7 @@ func (c *Client) CreateChannel(guildID string, name string, channelType discord.
 		UserLimit: maxUsers,
 	})
 	if err != nil {
-		return discord.Channel{}, err
+		return discord.Channel{}, fmt.Errorf("err creating channel, %w", err)
 	}
 	return discord.Channel{
 		ID:   createdChannel.ID,
@@ -84,7 +85,7 @@ func (c *Client) CreateChannel(guildID string, name string, channelType discord.
 }
 func (c *Client) SendTextMessage(channelID string, message string) error {
 	_, err := c.session.ChannelMessageSend(channelID, message)
-	return err
+	return fmt.Errorf("err sending channel message, %w", err)
 }
 
 func (c *Client) SetEmbed(channelID string, messageID string, embed discord.MessageEmbed) error {
@@ -109,13 +110,13 @@ func (c *Client) SetEmbed(channelID string, messageID string, embed discord.Mess
 
 	_, err := c.session.ChannelMessageEditEmbed(channelID, messageID, dgEmbed)
 
-	return err
+	return fmt.Errorf("err editing embed, %w", err)
 }
 
 func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (voice *discord.VoiceConnection, err error) {
 	conn, err := c.session.ChannelVoiceJoin(guildID, channelID, mute, deaf)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("err joining voice channel, %w", err)
 	}
 
 	voiceRecv := make(chan *discord.Packet)
@@ -145,7 +146,7 @@ func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
 	discordGoConn.Close()
 	err := discordGoConn.Disconnect()
 	close(voice.VoiceReceiver)
-	return err
+	return fmt.Errorf("err disconnecting discord voice conn, %w", err)
 }
 
 func (c *Client) SendFileMessage(channelID string, name, contentType string, readable io.Reader) (discord.Message, error) {
@@ -159,7 +160,7 @@ func (c *Client) SendFileMessage(channelID string, name, contentType string, rea
 		},
 	})
 	if err != nil {
-		return discord.Message{}, err
+		return discord.Message{}, fmt.Errorf("err sending complex message, %w", err)
 	}
 	return discord.Message{
 		ID:        sendComplex.ID,

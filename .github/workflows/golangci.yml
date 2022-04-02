@@ -25,4 +25,4 @@ jobs:
       uses: golangci/golangci-lint-action@v3
       with:
         version: latest
-        args: -E ifshort -E golint -E prealloc -E nlreturn -E wrapcheck
+        args: -E ifshort -E golint -E prealloc -E wrapcheck

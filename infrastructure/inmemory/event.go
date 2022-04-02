@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"context"
+	"fmt"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 )
 
@@ -27,7 +28,7 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 		for _, handler := range handlers {
 			err := handler.Handle(ctx, evt)
 			if err != nil {
-				return err
+				return fmt.Errorf("err invoking handler for event, %w", err)
 			}
 		}
 	}
@@ -37,10 +38,8 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 
 // Subscribe implements the event.Bus interface.
 func (b *EventBus) Subscribe(evtType event.Type, handler event.Handler) {
-	_, ok := b.handlers[evtType]
-	if !ok {
+	if _, ok := b.handlers[evtType]; !ok {
 		b.handlers[evtType] = []event.Handler{}
 	}
-
 	b.handlers[evtType] = append(b.handlers[evtType], handler)
 }
