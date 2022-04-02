@@ -19,22 +19,33 @@ func NewRepository(basePath string) *Repository {
 			log.Fatalln("could not create root dir for local fs", err)
 		}
 	}
+
 	return &Repository{basePath: basePath}
 }
 
 func (repo *Repository) GetFullPath(fileName string) string {
 	baseFilePath := repo.basePath
+
 	return fmt.Sprintf("%s/%s", baseFilePath, fileName)
 }
 
 func (repo *Repository) Open(fileName string) (*os.File, error) {
 	fileLocation := repo.sanitizePath(fileName)
-	return os.Open(fileLocation)
+
+	f, err := os.Open(fileLocation)
+	if err != nil {
+		return nil, fmt.Errorf("err opening localfs file, %w", err)
+	}
+	return f, nil
 }
 
 func (repo *Repository) CreateEmpty(fileName string) (*os.File, error) {
 	fileLocation := repo.sanitizePath(fileName)
-	return os.Create(fileLocation)
+	f, err := os.Create(fileLocation)
+	if err != nil {
+		return nil, fmt.Errorf("err creating empty file, %w", err)
+	}
+	return f, nil
 }
 func (repo *Repository) DeleteAll(fileNames ...string) {
 	for _, fileName := range fileNames {

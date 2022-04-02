@@ -3,9 +3,9 @@ package domain
 import "os"
 
 type LockedUserRepository interface {
-	GetCurrentLock(guildId string) (string, chan bool)
-	ReleaseUserLock(guildId string)
-	SetLock(guildId string, userId string)
+	GetCurrentLock(guildID string) (string, chan bool)
+	ReleaseUserLock(guildID string)
+	SetLock(guildID string, userID string)
 }
 
 type FileRepository interface {

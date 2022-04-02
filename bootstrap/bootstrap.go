@@ -2,6 +2,7 @@ package bootstrap
 
 import (
 	"context"
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/application"
 	"github.com/hectorgabucio/taterubot-dc/config"
@@ -17,7 +18,7 @@ import (
 	"log"
 )
 
-func createServerAndDependencies() (error, context.Context, *server.Server) {
+func createServerAndDependencies() (context.Context, *server.Server, error) {
 	// CONFIG
 
 	viper.SetDefault("LANGUAGE", "en")
@@ -25,8 +26,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 
 	viper.SetConfigFile(`config.json`)
 	viper.SetConfigType("json") // Look for specific type
-	err := viper.ReadInConfig()
-	if err != nil {
+	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln(err)
 	}
 	viper.AutomaticEnv()
@@ -43,7 +43,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	// INFRASTRUCTURE
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, fmt.Errorf("error getting new bot client, %w", err)
 	}
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
@@ -55,7 +55,7 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	decoder := mp3decoder.NewMP3Decoder()
 
 	discordClient := discordwrapper.NewClient(s)
-	oggWriter := &pion.PionWriter{}
+	oggWriter := &pion.Writer{}
 
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
@@ -75,13 +75,16 @@ func createServerAndDependencies() (error, context.Context, *server.Server) {
 	commandBus.Register(application.RecordingCommandType, voiceCommandHandler)
 
 	ctx, srv := server.NewServer(context.Background(), s, commandBus)
-	return nil, ctx, &srv
+	return ctx, &srv, nil
 }
 
 func Run() error {
-	err, ctx, srv := createServerAndDependencies()
+	ctx, srv, err := createServerAndDependencies()
 	if err != nil {
 		return err
 	}
-	return srv.Run(ctx)
+	if err = srv.Run(ctx); err != nil {
+		return fmt.Errorf("err running server, %w", err)
+	}
+	return nil
 }

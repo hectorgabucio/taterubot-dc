@@ -2,6 +2,7 @@ package inmemory
 
 import (
 	"context"
+	"fmt"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 )
 
@@ -24,7 +25,10 @@ func (b *CommandBus) Dispatch(ctx context.Context, cmd command.Command) error {
 		return nil
 	}
 
-	return handler.Handle(ctx, cmd)
+	if err := handler.Handle(ctx, cmd); err != nil {
+		return fmt.Errorf("err invoking command handler, %w", err)
+	}
+	return nil
 }
 
 // Register implements the command.Bus interface.

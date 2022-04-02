@@ -11,6 +11,7 @@ require (
 	github.com/pion/rtp v1.7.9
 	github.com/pion/webrtc/v3 v3.1.27
 	github.com/spf13/viper v1.10.1
+	github.com/u2takey/ffmpeg-go v0.4.1
 )
 
 require (
@@ -33,7 +34,6 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.2.0 // indirect
-	github.com/u2takey/ffmpeg-go v0.4.1 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	golang.org/x/crypto v0.0.0-20220131195533-30dcbda58838 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect

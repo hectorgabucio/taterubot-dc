@@ -13,8 +13,8 @@ func NewLockedUserRepository() *Repository {
 	return &Repository{lockedUsers: map[string]*LockUser{}}
 }
 
-func (repo *Repository) SetLock(guildId string, userId string) {
-	previousLock := repo.lockedUsers[guildId]
+func (repo *Repository) SetLock(guildID string, userID string) {
+	previousLock := repo.lockedUsers[guildID]
 	if previousLock == nil {
 		previousLock = &LockUser{
 			id:   "",
@@ -25,23 +25,23 @@ func (repo *Repository) SetLock(guildId string, userId string) {
 	if done == nil {
 		done = make(chan bool)
 	}
-	repo.lockedUsers[guildId] = &LockUser{
-		id:   userId,
+	repo.lockedUsers[guildID] = &LockUser{
+		id:   userID,
 		done: done,
 	}
-
 }
-
-func (repo *Repository) GetCurrentLock(guildId string) (string, chan bool) {
-	lockUser, ok := repo.lockedUsers[guildId]
+func (repo *Repository) GetCurrentLock(guildID string) (string, chan bool) {
+	lockUser, ok := repo.lockedUsers[guildID]
 	if !ok {
-		repo.SetLock(guildId, "")
-		lockUser = repo.lockedUsers[guildId]
+		repo.SetLock(guildID, "")
+		lockUser = repo.lockedUsers[guildID]
+
 		return lockUser.id, lockUser.done
 	}
+
 	return lockUser.id, lockUser.done
 }
 
-func (repo *Repository) ReleaseUserLock(guildId string) {
-	repo.lockedUsers[guildId].id = ""
+func (repo *Repository) ReleaseUserLock(guildID string) {
+	repo.lockedUsers[guildID].id = ""
 }

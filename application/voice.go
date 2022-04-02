@@ -19,20 +19,20 @@ import (
 const RecordingCommandType command.Type = "command.recording"
 
 type RecordingCommand struct {
-	UserId           string
-	CurrentChannelId string
-	GuildId          string
+	UserID           string
+	CurrentChannelID string
+	GuildID          string
 	Username         string
-	AvatarUrl        string
+	AvatarURL        string
 }
 
-func NewRecordingCommand(userId string, channelId string, guildId string, username string, avatarUrl string) RecordingCommand {
+func NewRecordingCommand(userID string, channelID string, guildID string, username string, avatarURL string) RecordingCommand {
 	return RecordingCommand{
-		UserId:           userId,
-		CurrentChannelId: channelId,
-		GuildId:          guildId,
+		UserID:           userID,
+		CurrentChannelID: channelID,
+		GuildID:          guildID,
 		Username:         username,
-		AvatarUrl:        avatarUrl,
+		AvatarURL:        avatarURL,
 	}
 }
 
@@ -57,7 +57,7 @@ func (h RecordingCommandHandler) Handle(ctx context.Context, cmd command.Command
 	if !ok {
 		return errors.New("unexpected command")
 	}
-	return h.service.handleVoiceRecording(recordingCmd.UserId, recordingCmd.CurrentChannelId, recordingCmd.GuildId, recordingCmd.Username, recordingCmd.AvatarUrl)
+	return h.service.handleVoiceRecording(recordingCmd.UserID, recordingCmd.CurrentChannelID, recordingCmd.GuildID, recordingCmd.Username, recordingCmd.AvatarURL)
 }
 
 type VoiceRecorder struct {
@@ -79,39 +79,37 @@ func NewVoiceRecorder(discord discord.Client, configChannelName string, lockedUs
 		oggWriter:            writer,
 	}
 }
-
-func (usecase *VoiceRecorder) handleVoiceRecording(userId string, nowChannelId string, guildID string, username string, avatarUrl string) error {
-
+func (usecase *VoiceRecorder) handleVoiceRecording(userID string, nowChannelID string, guildID string, username string, avatarURL string) error {
 	currentLockedUser, done := usecase.lockedUserRepository.GetCurrentLock(guildID)
 
-	if nowChannelId == "" && currentLockedUser != userId {
+	if nowChannelID == "" && currentLockedUser != userID {
 		return nil
 	}
-	if currentLockedUser == userId {
+	if currentLockedUser == userID {
 		done <- true
 		usecase.lockedUserRepository.ReleaseUserLock(guildID)
 		return nil
 	}
 
-	channel, err := usecase.discord.GetChannel(nowChannelId)
+	channel, err := usecase.discord.GetChannel(nowChannelID)
 	if err != nil {
 		log.Println(err)
-		return err
+		return fmt.Errorf("err getting channel, %w", err)
 	}
 	if channel.Name != usecase.configChannelName {
 		return nil
 	}
 
-	usecase.lockedUserRepository.SetLock(guildID, userId)
-	return usecase.recordAndSend(guildID, nowChannelId, username, avatarUrl, done)
+	usecase.lockedUserRepository.SetLock(guildID, userID)
+	return usecase.recordAndSend(guildID, nowChannelID, username, avatarURL, done)
 }
 
-func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, username string, avatarUrl string, done chan bool) error {
-	v, err := usecase.discord.JoinVoiceChannel(guildId, channelId, true, false)
+func (usecase *VoiceRecorder) recordAndSend(guildID string, channelID string, username string, avatarURL string, done chan bool) error {
+	v, err := usecase.discord.JoinVoiceChannel(guildID, channelID, true, false)
 
 	if err != nil {
 		log.Println("failed to join voice channel:", err)
-		return err
+		return fmt.Errorf("err joining voice channel, %w", err)
 	}
 
 	go func() {
@@ -121,13 +119,12 @@ func (usecase *VoiceRecorder) recordAndSend(guildId string, channelId string, us
 		if err != nil {
 			log.Println(err)
 		}
-
 	}()
-	usecase.handleVoice(v.VoiceReceiver, guildId, username, avatarUrl)
+	usecase.handleVoice(v.VoiceReceiver, guildID, username, avatarURL)
 	return nil
 }
 
-func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string, username string, avatarUrl string) []string {
+func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildID string, username string, avatarURL string) []string {
 	files := make(map[string]io.Closer)
 	for p := range c {
 		name := username + "-" + fmt.Sprintf("%d", p.SSRC)
@@ -149,8 +146,8 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string
 
 	log.Println("done listening voice")
 
-	// Once we made it here, we're done listening for packets. Close all files
-	var mp3Names []string
+	mp3Names := make([]string, len(files))
+	i := 0
 	for fileName, f := range files {
 		err := f.Close()
 		if err != nil {
@@ -162,18 +159,18 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, guildId string
 			log.Println(err)
 			return nil
 		}
-		mp3Names = append(mp3Names, fileName)
+		mp3Names[i] = fileName
+		i++
 	}
 
 	// TODO event recording file created
-	usecase.sendAudioFiles(guildId, mp3Names, username, avatarUrl)
+	usecase.sendAudioFiles(guildID, mp3Names, username, avatarURL)
 
 	return mp3Names
-
 }
 
-func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string, username string, avatarUrl string) {
-	channels, err := usecase.discord.GetGuildChannels(guildId)
+func (usecase *VoiceRecorder) sendAudioFiles(guildID string, fileNames []string, username string, avatarURL string) {
+	channels, err := usecase.discord.GetGuildChannels(guildID)
 	if err != nil {
 		return
 	}
@@ -181,9 +178,9 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string,
 	var chID string
 	for _, ch := range channels {
 		if ch.Type == discord.ChannelTypeGuildText {
-			chID = ch.Id
-			break
+			chID = ch.ID
 
+			break
 		}
 	}
 
@@ -192,12 +189,11 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildId string, fileNames []string,
 	}
 
 	for _, fileName := range fileNames {
-		usecase.sendAudioFile(chID, fileName, username, avatarUrl)
+		usecase.sendAudioFile(chID, fileName, username, avatarURL)
 	}
-
 }
 
-func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, username string, avatarUrl string) {
+func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, username string, avatarURL string) {
 	mp3FullName := usecase.fsRepo.GetFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
 	file, err := usecase.fsRepo.Open(mp3FullName)
 	if err != nil {
@@ -221,21 +217,20 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 	}
 
 	events := []event.Event{
-		domain.NewAudioSentEvent(messageSent.Id, messageSent.ChannelId, username, avatarUrl, mp3FullName, fileName),
+		domain.NewAudioSentEvent(messageSent.ID, messageSent.ChannelID, username, avatarURL, mp3FullName, fileName),
 	}
-
 	go func() {
 		err := usecase.eventBus.Publish(context.Background(), events)
 		if err != nil {
 			log.Println("err publishing audio sent event", err)
 		}
 	}()
-
 }
-
 func convertToMp3(input string, output string) error {
-	return ffmpeg.Input(input).
+	if err := ffmpeg.Input(input).
 		Output(output, ffmpeg.KwArgs{"acodec": "libmp3lame", "b:a": "96k", "map": "a"}).
-		OverWriteOutput().ErrorToStdOut().Run()
-
+		OverWriteOutput().Run(); err != nil {
+		return fmt.Errorf("failed to convert to mp3, %w", err)
+	}
+	return nil
 }

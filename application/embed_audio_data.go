@@ -1,7 +1,6 @@
 package application
 
-// TODO create image infra service
-// TODO create mp3 infra service
+// TODO create image infra service.
 import (
 	"context"
 	"errors"
@@ -54,10 +53,10 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 		},
 	}
 
-	err := handler.discord.SetEmbed(audioSentEvt.ChannelId(), audioSentEvt.AggregateID(), newEmbed)
+	err := handler.discord.SetEmbed(audioSentEvt.ChannelID(), audioSentEvt.AggregateID(), newEmbed)
 	if err != nil {
 		log.Println(err)
-		return err
+		return fmt.Errorf("err setting embed in message, %w", err)
 	}
 	go func() {
 		err := handler.bus.Publish(ctx, []event.Event{domain.NewDoneProcessingFilesEvent(audioSentEvt.FileName())})
@@ -76,23 +75,23 @@ func (handler *AddMetadataOnAudioSent) getDominantAvatarColor(url string, fileNa
 	}
 	color, err := handler.prominentColor(fileName)
 	if err != nil {
+		fmt.Printf("couldnt get prominent color: %v", err)
 		return 0
 	}
 	return color
-
 }
 
 func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, error) {
 	// Step 1: Load the image
 	img, err := handler.loadImage(fmt.Sprintf("%s.png", fileName))
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Failed to load image: %v", err))
+		return 0, fmt.Errorf("failed to load image: %w", err)
 	}
 
 	// Step 2: Process it
 	colours, err := prominentcolor.Kmeans(img)
 	if err != nil {
-		return 0, errors.New(fmt.Sprintf("Failed to process image: %v", err))
+		return 0, fmt.Errorf("failed to process image: %w", err)
 	}
 
 	for _, colour := range colours {
@@ -105,7 +104,7 @@ func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, err
 func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image, error) {
 	f, err := handler.fsRepo.Open(fileInput)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("err opening image file, %w", err)
 	}
 	defer func(f *os.File) {
 		err := f.Close()
@@ -114,14 +113,16 @@ func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image,
 		}
 	}(f)
 	img, _, err := image.Decode(f)
-	return img, err
+	if err != nil {
+		return nil, fmt.Errorf("err decoding image, %w", err)
+	}
+	return img, nil
 }
 
-func (handler *AddMetadataOnAudioSent) downloadFile(URL, fileName string) error {
-	//Get the response bytes from the url
-	response, err := http.Get(URL)
+func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error {
+	response, err := http.Get(url)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to download file, %w", err)
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
@@ -135,7 +136,7 @@ func (handler *AddMetadataOnAudioSent) downloadFile(URL, fileName string) error 
 	}
 	file, err := handler.fsRepo.CreateEmpty(fileName)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create empty file to write response, %w", err)
 	}
 	defer func(file *os.File) {
 		err := file.Close()
@@ -143,11 +144,9 @@ func (handler *AddMetadataOnAudioSent) downloadFile(URL, fileName string) error 
 			log.Println("error closing file", err)
 		}
 	}(file)
-
-	//Write the bytes to the field
 	_, err = io.Copy(file, response.Body)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to copy response body to file, %w", err)
 	}
 
 	return nil

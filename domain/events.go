@@ -7,17 +7,17 @@ const AudioSentEventType event.Type = "events.audio.sent"
 type AudioSentEvent struct {
 	id string
 	event.BaseEvent
-	channelId     string
+	channelID     string
 	username      string
 	userAvatarURL string
 	mp3Fullname   string
 	fileName      string
 }
 
-func NewAudioSentEvent(id string, channelId string, username string, userAvatarURL string, mp3Fullname string, fileName string) AudioSentEvent {
+func NewAudioSentEvent(id string, channelID string, username string, userAvatarURL string, mp3Fullname string, fileName string) AudioSentEvent {
 	return AudioSentEvent{
 		BaseEvent:     event.NewBaseEvent(id),
-		channelId:     channelId,
+		channelID:     channelID,
 		username:      username,
 		userAvatarURL: userAvatarURL,
 		mp3Fullname:   mp3Fullname,
@@ -41,8 +41,8 @@ func (e AudioSentEvent) Mp3Fullname() string {
 	return e.mp3Fullname
 }
 
-func (e AudioSentEvent) ChannelId() string {
-	return e.channelId
+func (e AudioSentEvent) ChannelID() string {
+	return e.channelID
 }
 
 func (e AudioSentEvent) FileName() string {

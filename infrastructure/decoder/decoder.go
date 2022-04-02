@@ -3,7 +3,6 @@ package mp3decoder
 import (
 	"github.com/faiface/beep"
 	"github.com/faiface/beep/mp3"
-	_ "github.com/faiface/beep/mp3"
 	"log"
 	"os"
 	"time"
@@ -12,7 +11,7 @@ import (
 type MP3Decoder struct {
 }
 
-func (M MP3Decoder) GetDuration(file *os.File) float64 {
+func (m MP3Decoder) GetDuration(file *os.File) float64 {
 	streamer, format, err := mp3.Decode(file)
 	if err != nil {
 		log.Fatal(err)

@@ -2,10 +2,10 @@ package discord
 
 import "io"
 
-// ChannelType is the type of a Channel
+// ChannelType is the type of a Channel.
 type ChannelType int
 
-// Block contains known ChannelType values
+// Block contains known ChannelType values.
 const (
 	ChannelTypeGuildText  ChannelType = 0
 	ChannelTypeGuildVoice ChannelType = 2
@@ -15,29 +15,29 @@ type Client interface {
 	GetGuilds() ([]Guild, error)
 	GetBotUsername() string
 	GetGuildChannels(guildID string) ([]Channel, error)
-	GetChannel(channelId string) (Channel, error)
+	GetChannel(channelID string) (Channel, error)
 	CreateChannel(guildID string, name string, channelType ChannelType, maxUsers int) (Channel, error)
-	SendTextMessage(channelId string, message string) error
-	SendFileMessage(channelId string, name, contentType string, readable io.Reader) (Message, error)
-	SetEmbed(channelId string, messageId string, embed MessageEmbed) error
-	JoinVoiceChannel(guildId, channelId string, mute, deaf bool) (voice *VoiceConnection, err error)
+	SendTextMessage(channelID string, message string) error
+	SendFileMessage(channelID string, name, contentType string, readable io.Reader) (Message, error)
+	SetEmbed(channelID string, messageID string, embed MessageEmbed) error
+	JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (voice *VoiceConnection, err error)
 	EndVoiceConnection(voice *VoiceConnection) error
 }
 
 type Guild struct {
-	Id   string
+	ID   string
 	Name string
 }
 
 type Channel struct {
-	Id   string
+	ID   string
 	Name string
 	Type ChannelType
 }
 
 type Message struct {
-	Id        string
-	ChannelId string
+	ID        string
+	ChannelID string
 }
 
 type MessageEmbed struct {

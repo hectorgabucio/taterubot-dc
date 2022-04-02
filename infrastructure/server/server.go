@@ -2,7 +2,6 @@ package server
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/hectorgabucio/taterubot-dc/application"
@@ -59,15 +58,12 @@ func (server *Server) registerHandlers() {
 				log.Println("err recording command", err)
 			}
 		}()
-
 	})
 }
 
 func (server *Server) Run(ctx context.Context) error {
-
-	err := server.session.Open()
-	if err != nil {
-		return errors.New(fmt.Sprintf("Cannot open the session: %v", err))
+	if err := server.session.Open(); err != nil {
+		return fmt.Errorf("Cannot open the session: %w", err)
 	}
 	defer func(s *discordgo.Session) {
 		err := s.Close()
@@ -75,10 +71,11 @@ func (server *Server) Run(ctx context.Context) error {
 			log.Println("err closing session", err)
 		}
 	}(server.session)
-
 	<-ctx.Done()
-	return ctx.Err()
-
+	if err := ctx.Err(); err != nil {
+		return fmt.Errorf("reason why context canceled, %w", err)
+	}
+	return nil
 }
 
 func serverContext(ctx context.Context) context.Context {
