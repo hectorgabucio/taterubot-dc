@@ -229,7 +229,7 @@ func (usecase *VoiceRecorder) sendAudioFile(chID string, fileName string, userna
 func convertToMp3(input string, output string) error {
 	if err := ffmpeg.Input(input).
 		Output(output, ffmpeg.KwArgs{"acodec": "libmp3lame", "b:a": "96k", "map": "a"}).
-		OverWriteOutput().ErrorToStdOut().Run(); err != nil {
+		OverWriteOutput().Run(); err != nil {
 		return fmt.Errorf("failed to convert to mp3, %w", err)
 	}
 	return nil

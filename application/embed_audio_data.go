@@ -75,6 +75,7 @@ func (handler *AddMetadataOnAudioSent) getDominantAvatarColor(url string, fileNa
 	}
 	color, err := handler.prominentColor(fileName)
 	if err != nil {
+		fmt.Printf("couldnt get prominent color: %v", err)
 		return 0
 	}
 	return color
@@ -112,7 +113,10 @@ func (handler *AddMetadataOnAudioSent) loadImage(fileInput string) (image.Image,
 		}
 	}(f)
 	img, _, err := image.Decode(f)
-	return img, fmt.Errorf("err decoding image, %w", err)
+	if err != nil {
+		return nil, fmt.Errorf("err decoding image, %w", err)
+	}
+	return img, nil
 }
 
 func (handler *AddMetadataOnAudioSent) downloadFile(url, fileName string) error {

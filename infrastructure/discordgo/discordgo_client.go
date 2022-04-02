@@ -84,8 +84,10 @@ func (c *Client) CreateChannel(guildID string, name string, channelType discord.
 	}, nil
 }
 func (c *Client) SendTextMessage(channelID string, message string) error {
-	_, err := c.session.ChannelMessageSend(channelID, message)
-	return fmt.Errorf("err sending channel message, %w", err)
+	if _, err := c.session.ChannelMessageSend(channelID, message); err != nil {
+		return fmt.Errorf("err sending channel message, %w", err)
+	}
+	return nil
 }
 
 func (c *Client) SetEmbed(channelID string, messageID string, embed discord.MessageEmbed) error {
@@ -108,9 +110,10 @@ func (c *Client) SetEmbed(channelID string, messageID string, embed discord.Mess
 		})
 	}
 
-	_, err := c.session.ChannelMessageEditEmbed(channelID, messageID, dgEmbed)
-
-	return fmt.Errorf("err editing embed, %w", err)
+	if _, err := c.session.ChannelMessageEditEmbed(channelID, messageID, dgEmbed); err != nil {
+		return fmt.Errorf("err editing embed, %w", err)
+	}
+	return nil
 }
 
 func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (voice *discord.VoiceConnection, err error) {
@@ -146,7 +149,10 @@ func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
 	discordGoConn.Close()
 	err := discordGoConn.Disconnect()
 	close(voice.VoiceReceiver)
-	return fmt.Errorf("err disconnecting discord voice conn, %w", err)
+	if err != nil {
+		return fmt.Errorf("err disconnecting discord voice conn, %w", err)
+	}
+	return nil
 }
 
 func (c *Client) SendFileMessage(channelID string, name, contentType string, readable io.Reader) (discord.Message, error) {

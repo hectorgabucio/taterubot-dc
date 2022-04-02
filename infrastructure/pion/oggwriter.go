@@ -25,8 +25,10 @@ func (w *Writer) WriteVoice(writer io.Closer, packet *discord.Packet) error {
 	if !ok {
 		log.Fatal("Could not cast to pion oggwriter")
 	}
-	err := pionOggWriter.WriteRTP(createPionRTPPacket(packet))
-	return fmt.Errorf("err writing rtp packet, %w", err)
+	if err := pionOggWriter.WriteRTP(createPionRTPPacket(packet)); err != nil {
+		return fmt.Errorf("err writing rtp packet, %w", err)
+	}
+	return nil
 }
 
 func createPionRTPPacket(p *discord.Packet) *rtp.Packet {
