@@ -12,6 +12,7 @@ import (
 	"image"
 	"io"
 	"log"
+	"math"
 	"net/http"
 	"os"
 	"strconv"
@@ -95,8 +96,14 @@ func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, err
 	}
 
 	for _, colour := range colours {
-		value, _ := strconv.ParseInt(colour.AsString(), 16, 64)
-		return int(value), nil
+		value, err := strconv.ParseInt(colour.AsString(), 16, 64)
+		if err != nil {
+			return 0, fmt.Errorf("error parsing color string to int, %w", err)
+		}
+		if value > 0 && value <= math.MaxInt {
+			return int(value), nil
+		}
+		return 0, nil
 	}
 	return 0, errors.New("couldnt get any dominant color")
 }
