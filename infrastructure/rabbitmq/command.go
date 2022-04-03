@@ -41,7 +41,7 @@ func (c *CommandBus) Dispatch(ctx context.Context, command command.Command) erro
 		return fmt.Errorf("err encoding command to buffer gob, %w", err)
 	}
 	err := c.Channel.Publish(exchange, string(command.Type()), false, false, amqp.Publishing{
-		AppId:       appId,
+		AppId:       appID,
 		ContentType: encodingType, // XXX: We will revisit this in future episodes
 		Body:        b.Bytes(),
 		Timestamp:   time.Now(),

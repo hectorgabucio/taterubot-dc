@@ -8,7 +8,7 @@ import (
 const exchange = "taterubot-exchange"
 
 const encodingType = "application/x-encoding-gob"
-const appId = "taterubot-rabbit"
+const appID = "taterubot-rabbit"
 const consumer = "consumer-taterubot"
 
 func establishConnection(connectionURL string) (*amqp.Connection, *amqp.Channel, error) {

@@ -45,7 +45,7 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 			return fmt.Errorf("err encoding event to buffer gob, %w", err)
 		}
 		err := b.Channel.Publish(exchange, string(events[i].Type()), false, false, amqp.Publishing{
-			AppId:       appId,
+			AppId:       appID,
 			ContentType: encodingType,
 			Body:        buf.Bytes(),
 			Timestamp:   time.Now(),
