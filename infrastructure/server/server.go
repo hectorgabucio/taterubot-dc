@@ -31,6 +31,58 @@ func (server *Server) Close() {
 	}
 }
 
+func (server *Server) afterReady() {
+
+	commands := []*discordgo.ApplicationCommand{
+		{
+			Name:        "taterubot",
+			Description: "I will say hi!",
+		},
+	}
+	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
+		"taterubot": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: ":hand_splayed:",
+				},
+			}); err != nil {
+				log.Println(err)
+			}
+			go func() {
+				err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
+				if err != nil {
+					log.Println("err greeting command", err)
+				}
+			}()
+		},
+	}
+	guilds, err := server.session.UserGuilds(100, "", "")
+	if err != nil {
+		return
+	}
+
+	log.Println("Adding commands...")
+	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
+	for _, guild := range guilds {
+		for i, v := range commands {
+			cmd, err := server.session.ApplicationCommandCreate(server.session.State.User.ID, guild.ID, v)
+			if err != nil {
+				log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+			}
+			registeredCommands[i] = cmd
+		}
+	}
+
+	// server.session.ApplicationCommandDelete(server.session.State.User.ID, "", applicationCommands[0].ID)
+
+	server.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
+			h(s, i)
+		}
+	})
+}
+
 func (server *Server) registerHandlers() {
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is ready")
@@ -40,6 +92,8 @@ func (server *Server) registerHandlers() {
 				log.Println("err greeting command", err)
 			}
 		}()
+
+		server.afterReady()
 	})
 
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.VoiceStateUpdate) {

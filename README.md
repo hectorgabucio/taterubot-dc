@@ -2,10 +2,10 @@
 - commands. /tateru to repeat greeting. /tateru-stats for voice recording stats and ranking
 
 # Backlog
-- tests
-- better shared code amqp rabbit
 - postgre database
 - better directory structure to localization
+- better shared code amqp rabbit
+- tests
 - final readme with gif/video demo
 
 # Frozen
