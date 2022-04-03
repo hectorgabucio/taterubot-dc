@@ -41,6 +41,7 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	cfg.Language = viper.GetString("LANGUAGE")
 	cfg.BasePath = viper.GetString("BASE_PATH")
 	cfg.ChannelName = viper.GetString("CHANNEL_NAME")
+	cfg.CloudAMQPUrl = viper.GetString("CLOUDAMQP_URL")
 
 	// LOCALIZATION
 	l := localizations.New(cfg.Language, "en")
@@ -56,12 +57,11 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	// eventBus := inmemory.NewEventBus()
 	// commandBus := inmemory.NewCommandBus()
 
-	rabbitURL := "amqp://myuser:mypassword@localhost:5672"
-	eventBus, err := rabbitmq.NewEventBus(rabbitURL)
+	eventBus, err := rabbitmq.NewEventBus(cfg.CloudAMQPUrl)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	commandBus, err := rabbitmq.NewCommandBus(rabbitURL)
+	commandBus, err := rabbitmq.NewCommandBus(cfg.CloudAMQPUrl)
 	if err != nil {
 		log.Fatalln(err)
 	}

@@ -2,5 +2,6 @@
   "BOT_TOKEN": "a",
   "CHANNEL_NAME": "TATERU",
   "LANGUAGE": "en",
-  "BASE_PATH": "./tmp"
+  "BASE_PATH": "./tmp",
+  "CLOUDAMQP_URL": "amqp://myuser:mypassword@localhost:5672"
 }

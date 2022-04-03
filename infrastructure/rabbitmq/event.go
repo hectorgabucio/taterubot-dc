@@ -47,7 +47,7 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 		}
 		err := b.Channel.Publish(EXCHANGE, string(events[i].Type()), false, false, amqp.Publishing{
 			AppId:       APP_ID,
-			ContentType: ENCODING_TYPE, // XXX: We will revisit this in future episodes
+			ContentType: ENCODING_TYPE,
 			Body:        buf.Bytes(),
 			Timestamp:   time.Now(),
 		})
