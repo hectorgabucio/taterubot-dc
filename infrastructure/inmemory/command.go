@@ -35,3 +35,8 @@ func (b *CommandBus) Dispatch(ctx context.Context, cmd command.Command) error {
 func (b *CommandBus) Register(cmdType command.Type, handler command.Handler) {
 	b.handlers[cmdType] = handler
 }
+
+// Close is a no-op in im-memory implementation
+func (b *CommandBus) Close() {
+
+}

@@ -65,12 +65,14 @@ func (server *Server) Run(ctx context.Context) error {
 	if err := server.session.Open(); err != nil {
 		return fmt.Errorf("Cannot open the session: %w", err)
 	}
-	defer func(s *discordgo.Session) {
-		err := s.Close()
+	// resources
+	defer func() {
+		err := server.session.Close()
 		if err != nil {
 			log.Println("err closing session", err)
 		}
-	}(server.session)
+		server.commandBus.Close()
+	}()
 	<-ctx.Done()
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("reason why context canceled, %w", err)

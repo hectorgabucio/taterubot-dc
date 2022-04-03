@@ -8,6 +8,7 @@ type Bus interface {
 	Dispatch(context.Context, Command) error
 	// Register is the method used to register a new command handler.
 	Register(Type, Handler)
+	Close()
 }
 
 // Type represents an application command type.

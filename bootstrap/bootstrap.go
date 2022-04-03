@@ -12,6 +12,7 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/pion"
+	"github.com/hectorgabucio/taterubot-dc/infrastructure/rabbitmq"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/spf13/viper"
@@ -49,7 +50,11 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
 	eventBus := inmemory.NewEventBus()
-	commandBus := inmemory.NewCommandBus()
+	// commandBus := inmemory.NewCommandBus()
+	commandBus, err := rabbitmq.NewCommandBus("amqp://myuser:mypassword@localhost:5672")
+	if err != nil {
+		log.Fatalln(err)
+	}
 	lockedUserRepo := inmemory.NewLockedUserRepository()
 	fsRepo := localfs.NewRepository(cfg.BasePath)
 	decoder := mp3decoder.NewMP3Decoder()
