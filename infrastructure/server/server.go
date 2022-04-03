@@ -31,7 +31,7 @@ func (server *Server) Close() {
 	}
 }
 
-func (server *Server) afterReady() {
+func (server *Server) installInteractions() {
 
 	commands := []*discordgo.ApplicationCommand{
 		{
@@ -86,14 +86,7 @@ func (server *Server) afterReady() {
 func (server *Server) registerHandlers() {
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.Ready) {
 		log.Println("Bot is ready")
-		go func() {
-			err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
-			if err != nil {
-				log.Println("err greeting command", err)
-			}
-		}()
-
-		server.afterReady()
+		server.installInteractions()
 	})
 
 	server.session.AddHandler(func(s *discordgo.Session, r *discordgo.VoiceStateUpdate) {
