@@ -26,8 +26,7 @@ func NewServer(ctx context.Context, session *discordgo.Session, commandBus comma
 }
 
 func (server *Server) Close() {
-	err := server.session.Close()
-	if err != nil {
+	if err := server.session.Close(); err != nil {
 		log.Println("err closing session", err)
 	}
 }

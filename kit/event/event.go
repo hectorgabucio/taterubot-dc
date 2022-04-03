@@ -33,21 +33,21 @@ type Event interface {
 }
 
 type BaseEvent struct {
-	MEventId     string
+	MEventID     string
 	MAggregateID string
 	MOccurredOn  time.Time
 }
 
 func NewBaseEvent(aggregateID string) BaseEvent {
 	return BaseEvent{
-		MEventId:     uuid.New().String(),
+		MEventID:     uuid.New().String(),
 		MAggregateID: aggregateID,
 		MOccurredOn:  time.Now(),
 	}
 }
 
 func (b BaseEvent) ID() string {
-	return b.MEventId
+	return b.MEventID
 }
 
 func (b BaseEvent) OccurredOn() time.Time {

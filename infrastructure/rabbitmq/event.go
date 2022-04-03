@@ -18,8 +18,7 @@ type EventBus struct {
 }
 
 func (b *EventBus) Close() {
-	err := b.Connection.Close()
-	if err != nil {
+	if err := b.Connection.Close(); err != nil {
 		log.Println("failed to close rabbitmq conn", err)
 	}
 }

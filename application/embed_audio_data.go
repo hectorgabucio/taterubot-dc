@@ -36,7 +36,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 	if !ok {
 		return errors.New("unexpected event")
 	}
-	log.Println("Going to handle event", audioSentEvt.ID, "aggregate id", audioSentEvt.AggregateID(), "file", audioSentEvt.Mp3Fullname)
+	log.Println("Going to handle event", audioSentEvt.ID(), "aggregate id", audioSentEvt.AggregateID(), "file", audioSentEvt.Mp3Fullname)
 
 	dominantColor := handler.getDominantAvatarColor(audioSentEvt.UserAvatarURL, audioSentEvt.FileName)
 	t := handler.getDuration(audioSentEvt.Mp3Fullname)
@@ -54,7 +54,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 		},
 	}
 
-	err := handler.discord.SetEmbed(audioSentEvt.ChannelId, audioSentEvt.AggregateID(), newEmbed)
+	err := handler.discord.SetEmbed(audioSentEvt.ChannelID, audioSentEvt.AggregateID(), newEmbed)
 	if err != nil {
 		log.Println(err)
 		return fmt.Errorf("err setting embed in message, %w", err)
