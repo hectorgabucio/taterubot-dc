@@ -13,6 +13,7 @@ type Bus interface {
 	Publish(context.Context, []Event) error
 	// Subscribe is the method used to subscribe new event handlers.
 	Subscribe(Type, Handler)
+	Close()
 }
 
 // Handler defines the expected behaviour from an event handler.
@@ -32,27 +33,27 @@ type Event interface {
 }
 
 type BaseEvent struct {
-	eventID     string
-	aggregateID string
-	occurredOn  time.Time
+	MEventId     string
+	MAggregateID string
+	MOccurredOn  time.Time
 }
 
 func NewBaseEvent(aggregateID string) BaseEvent {
 	return BaseEvent{
-		eventID:     uuid.New().String(),
-		aggregateID: aggregateID,
-		occurredOn:  time.Now(),
+		MEventId:     uuid.New().String(),
+		MAggregateID: aggregateID,
+		MOccurredOn:  time.Now(),
 	}
 }
 
 func (b BaseEvent) ID() string {
-	return b.eventID
+	return b.MEventId
 }
 
 func (b BaseEvent) OccurredOn() time.Time {
-	return b.occurredOn
+	return b.MOccurredOn
 }
 
 func (b BaseEvent) AggregateID() string {
-	return b.aggregateID
+	return b.MAggregateID
 }

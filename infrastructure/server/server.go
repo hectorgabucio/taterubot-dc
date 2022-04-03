@@ -16,13 +16,20 @@ type Server struct {
 	commandBus command.Bus
 }
 
-func NewServer(ctx context.Context, session *discordgo.Session, commandBus command.Bus) (context.Context, Server) {
+func NewServer(ctx context.Context, session *discordgo.Session, commandBus command.Bus) (context.Context, *Server) {
 	log.Println("Bot server running")
 
 	srv := Server{session, commandBus}
 	srv.registerHandlers()
 
-	return serverContext(ctx), srv
+	return serverContext(ctx), &srv
+}
+
+func (server *Server) Close() {
+	err := server.session.Close()
+	if err != nil {
+		log.Println("err closing session", err)
+	}
 }
 
 func (server *Server) registerHandlers() {
@@ -65,14 +72,6 @@ func (server *Server) Run(ctx context.Context) error {
 	if err := server.session.Open(); err != nil {
 		return fmt.Errorf("Cannot open the session: %w", err)
 	}
-	// resources
-	defer func() {
-		err := server.session.Close()
-		if err != nil {
-			log.Println("err closing session", err)
-		}
-		server.commandBus.Close()
-	}()
 	<-ctx.Done()
 	if err := ctx.Err(); err != nil {
 		return fmt.Errorf("reason why context canceled, %w", err)

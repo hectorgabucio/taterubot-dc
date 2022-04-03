@@ -17,37 +17,10 @@ type CommandBus struct {
 }
 
 func NewCommandBus(connectionURL string) (*CommandBus, error) {
-	conn, err := amqp.Dial(connectionURL)
+	conn, ch, err := establishConnection(connectionURL)
 	if err != nil {
-		return nil, fmt.Errorf("amqp.Dial %w", err)
+		return nil, err
 	}
-
-	ch, err := conn.Channel()
-	if err != nil {
-		return nil, fmt.Errorf("conn.Channel %w", err)
-	}
-
-	err = ch.ExchangeDeclare(
-		EXCHANGE, // name
-		"topic",  // type
-		true,     // durable
-		false,    // auto-deleted
-		false,    // internal
-		false,    // no-wait
-		nil,      // arguments
-	)
-	if err != nil {
-		return nil, fmt.Errorf("ch.ExchangeDeclare %w", err)
-	}
-
-	if err := ch.Qos(
-		1,     // prefetch count
-		0,     // prefetch size
-		false, // global
-	); err != nil {
-		return nil, fmt.Errorf("ch.Qos %w", err)
-	}
-
 	return &CommandBus{
 		Connection: conn,
 		Channel:    ch,
@@ -119,12 +92,15 @@ func (c *CommandBus) Register(t command.Type, handler command.Handler) {
 
 func handleCommands(commands <-chan amqp.Delivery, handler command.Handler) {
 	for delivery := range commands {
-		shouldAck := true
 		var cmd command.Command
 		buf := bytes.NewBuffer(delivery.Body)
 		if err := gob.NewDecoder(buf).Decode(&cmd); err != nil {
 			log.Printf("err decoding command gob, %v", err)
-			shouldAck = false
+			err := delivery.Ack(false)
+			if err != nil {
+				log.Println("err acking failed decoding", err)
+			}
+			return
 		}
 
 		log.Println("handling command", cmd)
@@ -136,7 +112,7 @@ func handleCommands(commands <-chan amqp.Delivery, handler command.Handler) {
 			}
 		}()
 
-		err := delivery.Ack(shouldAck)
+		err := delivery.Ack(false)
 		if err != nil {
 			log.Println("err ack command", err)
 		}
