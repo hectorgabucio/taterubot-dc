@@ -5,11 +5,11 @@ import (
 	"github.com/streadway/amqp"
 )
 
-const EXCHANGE = "taterubot-exchange"
+const exchange = "taterubot-exchange"
 
-const ENCODING_TYPE = "application/x-encoding-gob"
-const APP_ID = "taterubot-rabbit"
-const CONSUMER = "consumer-taterubot"
+const encodingType = "application/x-encoding-gob"
+const appId = "taterubot-rabbit"
+const consumer = "consumer-taterubot"
 
 func establishConnection(connectionURL string) (*amqp.Connection, *amqp.Channel, error) {
 	conn, err := amqp.Dial(connectionURL)
@@ -23,7 +23,7 @@ func establishConnection(connectionURL string) (*amqp.Connection, *amqp.Channel,
 	}
 
 	err = ch.ExchangeDeclare(
-		EXCHANGE, // name
+		exchange, // name
 		"topic",  // type
 		true,     // durable
 		false,    // auto-deleted

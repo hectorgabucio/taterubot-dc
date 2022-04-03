@@ -40,9 +40,9 @@ func (c *CommandBus) Dispatch(ctx context.Context, command command.Command) erro
 	if err := gob.NewEncoder(&b).Encode(&command); err != nil {
 		return fmt.Errorf("err encoding command to buffer gob, %w", err)
 	}
-	err := c.Channel.Publish(EXCHANGE, string(command.Type()), false, false, amqp.Publishing{
-		AppId:       APP_ID,
-		ContentType: ENCODING_TYPE, // XXX: We will revisit this in future episodes
+	err := c.Channel.Publish(exchange, string(command.Type()), false, false, amqp.Publishing{
+		AppId:       appId,
+		ContentType: encodingType, // XXX: We will revisit this in future episodes
 		Body:        b.Bytes(),
 		Timestamp:   time.Now(),
 	})
@@ -67,7 +67,7 @@ func (c *CommandBus) Register(t command.Type, handler command.Handler) {
 	err = c.Channel.QueueBind(
 		q.Name,    // queue name
 		string(t), // routing key
-		EXCHANGE,  // exchange
+		exchange,  // exchange
 		false,
 		nil,
 	)
@@ -76,7 +76,7 @@ func (c *CommandBus) Register(t command.Type, handler command.Handler) {
 	}
 	msgs, err := c.Channel.Consume(
 		q.Name,                            // queue
-		fmt.Sprintf("%s-%s", CONSUMER, t), // consumer
+		fmt.Sprintf("%s-%s", consumer, t), // consumer
 		false,                             // auto-ack
 		false,                             // exclusive
 		false,                             // no-local

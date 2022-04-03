@@ -44,9 +44,9 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 		if err := gob.NewEncoder(&buf).Encode(&events[i]); err != nil {
 			return fmt.Errorf("err encoding event to buffer gob, %w", err)
 		}
-		err := b.Channel.Publish(EXCHANGE, string(events[i].Type()), false, false, amqp.Publishing{
-			AppId:       APP_ID,
-			ContentType: ENCODING_TYPE,
+		err := b.Channel.Publish(exchange, string(events[i].Type()), false, false, amqp.Publishing{
+			AppId:       appId,
+			ContentType: encodingType,
 			Body:        buf.Bytes(),
 			Timestamp:   time.Now(),
 		})
@@ -73,7 +73,7 @@ func (b *EventBus) Subscribe(evtType event.Type, handler event.Handler) {
 	err = b.Channel.QueueBind(
 		q.Name,          // queue name
 		string(evtType), // routing key
-		EXCHANGE,        // exchange
+		exchange,        // exchange
 		false,
 		nil,
 	)
@@ -82,7 +82,7 @@ func (b *EventBus) Subscribe(evtType event.Type, handler event.Handler) {
 	}
 	msgs, err := b.Channel.Consume(
 		q.Name,                                  // queue
-		fmt.Sprintf("%s-%s", CONSUMER, evtType), // consumer
+		fmt.Sprintf("%s-%s", consumer, evtType), // consumer
 		false,                                   // auto-ack
 		false,                                   // exclusive
 		false,                                   // no-local
