@@ -36,6 +36,10 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 	return nil
 }
 
+func (b *EventBus) Close() {
+
+}
+
 // Subscribe implements the event.Bus interface.
 func (b *EventBus) Subscribe(evtType event.Type, handler event.Handler) {
 	if _, ok := b.handlers[evtType]; !ok {

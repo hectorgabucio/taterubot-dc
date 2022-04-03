@@ -12,13 +12,18 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/pion"
+	"github.com/hectorgabucio/taterubot-dc/infrastructure/rabbitmq"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/spf13/viper"
 	"log"
 )
 
-func createServerAndDependencies() (context.Context, *server.Server, error) {
+type Closer interface {
+	Close()
+}
+
+func createServerAndDependencies() (context.Context, *server.Server, []Closer, error) {
 	// CONFIG
 
 	viper.SetDefault("LANGUAGE", "en")
@@ -36,6 +41,7 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 	cfg.Language = viper.GetString("LANGUAGE")
 	cfg.BasePath = viper.GetString("BASE_PATH")
 	cfg.ChannelName = viper.GetString("CHANNEL_NAME")
+	cfg.CloudAMQPUrl = viper.GetString("CLOUDAMQP_URL")
 
 	// LOCALIZATION
 	l := localizations.New(cfg.Language, "en")
@@ -43,13 +49,22 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 	// INFRASTRUCTURE
 	s, err := discordgo.New("Bot " + cfg.BotToken)
 	if err != nil {
-		return nil, nil, fmt.Errorf("error getting new bot client, %w", err)
+		return nil, nil, nil, fmt.Errorf("error getting new bot client, %w", err)
 	}
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
-	eventBus := inmemory.NewEventBus()
-	commandBus := inmemory.NewCommandBus()
+	// eventBus := inmemory.NewEventBus()
+	// commandBus := inmemory.NewCommandBus()
+
+	eventBus, err := rabbitmq.NewEventBus(cfg.CloudAMQPUrl)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	commandBus, err := rabbitmq.NewCommandBus(cfg.CloudAMQPUrl)
+	if err != nil {
+		log.Fatalln(err)
+	}
 	lockedUserRepo := inmemory.NewLockedUserRepository()
 	fsRepo := localfs.NewRepository(cfg.BasePath)
 	decoder := mp3decoder.NewMP3Decoder()
@@ -75,11 +90,14 @@ func createServerAndDependencies() (context.Context, *server.Server, error) {
 	commandBus.Register(application.RecordingCommandType, voiceCommandHandler)
 
 	ctx, srv := server.NewServer(context.Background(), s, commandBus)
-	return ctx, &srv, nil
+	return ctx, srv, []Closer{
+		commandBus, eventBus, srv,
+	}, nil
 }
 
 func Run() error {
-	ctx, srv, err := createServerAndDependencies()
+	ctx, srv, closers, err := createServerAndDependencies()
+	defer closeResources(closers)
 	if err != nil {
 		return err
 	}
@@ -87,4 +105,10 @@ func Run() error {
 		return fmt.Errorf("err running server, %w", err)
 	}
 	return nil
+}
+
+func closeResources(closers []Closer) {
+	for _, closer := range closers {
+		closer.Close()
+	}
 }
