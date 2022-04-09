@@ -25,10 +25,12 @@ func NewServer(ctx context.Context, session *discordgo.Session, commandBus comma
 	return serverContext(ctx), &srv
 }
 
-func (server *Server) Close() {
+func (server *Server) Close() error {
 	if err := server.session.Close(); err != nil {
 		log.Println("err closing session", err)
+		return fmt.Errorf("server.close:%w", err)
 	}
+	return nil
 }
 
 func (server *Server) installInteractions() {
@@ -62,7 +64,6 @@ func (server *Server) installInteractions() {
 		return
 	}
 
-	log.Println("Adding commands...")
 	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
 	for _, guild := range guilds {
 		for i, v := range commands {

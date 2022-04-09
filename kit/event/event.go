@@ -13,7 +13,7 @@ type Bus interface {
 	Publish(context.Context, []Event) error
 	// Subscribe is the method used to subscribe new event handlers.
 	Subscribe(Type, Handler)
-	Close()
+	Close() error
 }
 
 // Handler defines the expected behaviour from an event handler.
