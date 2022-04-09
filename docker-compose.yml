@@ -6,6 +6,11 @@ services:
     environment:
       - RABBITMQ_DEFAULT_USER=myuser
       - RABBITMQ_DEFAULT_PASS=mypassword
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:15672" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
       # AMQP protocol port
       - '5672:5672'
@@ -14,6 +19,11 @@ services:
   db:
     image: postgres
     restart: always
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U test" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
       - "5432:5432"
     environment:
