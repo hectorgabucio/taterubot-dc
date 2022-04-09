@@ -16,6 +16,11 @@ build: generate
 generate:
 	go generate
 
+## Prepares local infrastructure
+.PHONY: local-infra
+local-infra:
+	docker compose up -d --remove-orphans
+
 ## Runs tests
 .PHONY: test
 test:
