@@ -17,10 +17,12 @@ type EventBus struct {
 	Channel    *amqp.Channel
 }
 
-func (b *EventBus) Close() {
+func (b *EventBus) Close() error {
 	if err := b.Connection.Close(); err != nil {
 		log.Println("failed to close rabbitmq conn", err)
+		return err
 	}
+	return nil
 }
 
 // NewEventBus initializes a new EventBus.

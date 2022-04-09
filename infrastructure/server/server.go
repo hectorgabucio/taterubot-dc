@@ -25,10 +25,12 @@ func NewServer(ctx context.Context, session *discordgo.Session, commandBus comma
 	return serverContext(ctx), &srv
 }
 
-func (server *Server) Close() {
+func (server *Server) Close() error {
 	if err := server.session.Close(); err != nil {
 		log.Println("err closing session", err)
+		return err
 	}
+	return nil
 }
 
 func (server *Server) installInteractions() {

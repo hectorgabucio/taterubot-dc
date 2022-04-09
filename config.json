@@ -3,5 +3,6 @@
   "CHANNEL_NAME": "TATERU",
   "LANGUAGE": "en",
   "BASE_PATH": "./tmp",
-  "CLOUDAMQP_URL": "amqp://myuser:mypassword@localhost:5672"
+  "CLOUDAMQP_URL": "amqp://myuser:mypassword@localhost:5672",
+  "DATABASE_URL": "postgresql://localhost/test?user=test&password=test&sslmode=disable"
 }

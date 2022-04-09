@@ -27,10 +27,12 @@ func NewCommandBus(connectionURL string) (*CommandBus, error) {
 	}, nil
 }
 
-func (c *CommandBus) Close() {
+func (c *CommandBus) Close() error {
 	if err := c.Connection.Close(); err != nil {
 		log.Println("failed to close rabbitmq conn", err)
+		return err
 	}
+	return nil
 }
 
 func (c *CommandBus) Dispatch(ctx context.Context, command command.Command) error {

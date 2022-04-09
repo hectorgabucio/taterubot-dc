@@ -11,3 +11,12 @@ services:
       - '5672:5672'
       # HTTP management UI
       - '15672:15672'
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: test
+      POSTGRES_USER: test
+      POSTGRES_DB: test

@@ -20,15 +20,16 @@ import (
 )
 
 type AddMetadataOnAudioSent struct {
-	discord      discord.Client
-	durationText string
-	fsRepo       domain.FileRepository
-	decoder      domain.MP3Decoder
-	bus          event.Bus
+	discord       discord.Client
+	durationText  string
+	fsRepo        domain.FileRepository
+	voiceDataRepo domain.VoiceDataRepository
+	decoder       domain.MP3Decoder
+	bus           event.Bus
 }
 
-func NewAddMetadataOnAudioSent(discord discord.Client, durationText string, fsRepo domain.FileRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
-	return &AddMetadataOnAudioSent{discord: discord, durationText: durationText, fsRepo: fsRepo, decoder: decoder, bus: bus}
+func NewAddMetadataOnAudioSent(discord discord.Client, durationText string, fsRepo domain.FileRepository, voiceDataRepo domain.VoiceDataRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
+	return &AddMetadataOnAudioSent{discord: discord, durationText: durationText, fsRepo: fsRepo, voiceDataRepo: voiceDataRepo, decoder: decoder, bus: bus}
 }
 
 func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Event) error {
@@ -40,7 +41,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 
 	dominantColor := handler.getDominantAvatarColor(audioSentEvt.UserAvatarURL, audioSentEvt.FileName)
 	t := handler.getDuration(audioSentEvt.Mp3Fullname)
-
+	seconds := int(t)
 	newEmbed := discord.MessageEmbed{
 		Title:     audioSentEvt.Username,
 		Timestamp: time.Now().Format(time.RFC3339),
@@ -49,7 +50,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 		Fields: []*discord.MessageEmbedField{
 			{
 				Name:  handler.durationText,
-				Value: formatSeconds(int(t)),
+				Value: formatSeconds(seconds),
 			},
 		},
 	}
@@ -58,6 +59,19 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 	if err != nil {
 		log.Println(err)
 		return fmt.Errorf("err setting embed in message, %w", err)
+	}
+
+	voiceData := domain.VoiceData{
+		GuildID:   audioSentEvt.GuildID,
+		ID:        audioSentEvt.ID(),
+		Timestamp: audioSentEvt.MOccurredOn,
+		Name:      audioSentEvt.FileName,
+		UserID:    audioSentEvt.UserID,
+		Duration:  seconds,
+	}
+	log.Println("saving voice data", voiceData)
+	if err := handler.voiceDataRepo.Save(voiceData); err != nil {
+		log.Println("err saving voice data", err)
 	}
 	go func() {
 		err := handler.bus.Publish(ctx, []event.Event{domain.NewDoneProcessingFilesEvent(audioSentEvt.FileName)})
