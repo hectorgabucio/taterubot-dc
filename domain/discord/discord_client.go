@@ -22,6 +22,7 @@ type Client interface {
 	SetEmbed(channelID string, messageID string, embed MessageEmbed) error
 	JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (voice *VoiceConnection, err error)
 	EndVoiceConnection(voice *VoiceConnection) error
+	EditInteraction(token string, message string) error
 }
 
 type Guild struct {
