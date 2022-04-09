@@ -6,5 +6,5 @@ type Config struct {
 	Language     string
 	BasePath     string
 	CloudAMQPUrl string
-	DatabaseUrl  string
+	DatabaseURL  string
 }
