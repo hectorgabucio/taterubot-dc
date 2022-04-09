@@ -13,10 +13,11 @@ import (
 const GreetingCommandType command.Type = "command.greeting"
 
 type GreetingCommand struct {
+	InteractionToken string
 }
 
-func NewGreetingCommand() GreetingCommand {
-	return GreetingCommand{}
+func NewGreetingCommand(interactionToken string) GreetingCommand {
+	return GreetingCommand{InteractionToken: interactionToken}
 }
 
 func (c GreetingCommand) Type() command.Type {
@@ -36,10 +37,12 @@ func NewGreetingCommandHandler(service *GreetingMessageCreator) GreetingCommandH
 
 // Handle implements the command.Handler interface.
 func (h GreetingCommandHandler) Handle(ctx context.Context, cmd command.Command) error {
-	if _, ok := cmd.(GreetingCommand); !ok {
+	greetingCmd, ok :=
+		cmd.(GreetingCommand)
+	if !ok {
 		return errors.New("unexpected command")
 	}
-	return h.service.send()
+	return h.service.send(greetingCmd.InteractionToken)
 }
 
 type GreetingMessageCreator struct {
@@ -56,7 +59,7 @@ func NewGreetingMessageCreator(discord discord.Client, localization *localizatio
 	}
 }
 
-func (service *GreetingMessageCreator) send() error {
+func (service *GreetingMessageCreator) send(interactionToken string) error {
 	guilds, err := service.discordClient.GetGuilds()
 	if err != nil {
 		log.Println(err)
@@ -94,10 +97,9 @@ func (service *GreetingMessageCreator) send() error {
 			voiceChannelReplacement = service.channelName
 		}
 		greetingMessage := service.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": voiceChannelReplacement, "botName": botUsername})
-		err = service.discordClient.SendTextMessage(chosenChannelIDToSendGreeting, greetingMessage)
-		if err != nil {
+		if err := service.discordClient.EditInteraction(interactionToken, greetingMessage); err != nil {
 			log.Println(err)
-			return fmt.Errorf("err sending message text, %w", err)
+			return fmt.Errorf("err sending interaction response, %w", err)
 		}
 
 		break

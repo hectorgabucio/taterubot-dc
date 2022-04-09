@@ -34,7 +34,6 @@ func (server *Server) Close() error {
 }
 
 func (server *Server) installInteractions() {
-
 	commands := []*discordgo.ApplicationCommand{
 		{
 			Name:        "taterubot",
@@ -43,16 +42,16 @@ func (server *Server) installInteractions() {
 	}
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"taterubot": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
-			if err := s.InteractionRespond(i.Interaction, &discordgo.InteractionResponse{
+			if err := s.InteractionRespond(&discordgo.Interaction{ID: i.ID, Token: i.Token}, &discordgo.InteractionResponse{
 				Type: discordgo.InteractionResponseChannelMessageWithSource,
 				Data: &discordgo.InteractionResponseData{
-					Content: ":hand_splayed:",
+					Content: "...",
 				},
 			}); err != nil {
 				log.Println(err)
 			}
 			go func() {
-				err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand())
+				err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand(i.Token))
 				if err != nil {
 					log.Println("err greeting command", err)
 				}

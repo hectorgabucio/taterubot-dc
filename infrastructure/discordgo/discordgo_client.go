@@ -16,6 +16,16 @@ func NewClient(session *discordgo.Session) *Client {
 	return &Client{session: session}
 }
 
+func (c *Client) EditInteraction(token string, message string) error {
+	_, err := c.session.InteractionResponseEdit(c.session.State.User.ID, &discordgo.Interaction{Token: token}, &discordgo.WebhookEdit{
+		Content: message,
+	})
+	if err != nil {
+		return fmt.Errorf("discordgo.interaction.edit: %w", err)
+	}
+	return nil
+}
+
 func (c *Client) GetGuilds() ([]discord.Guild, error) {
 	infraGuilds, err := c.session.UserGuilds(100, "", "")
 	if err != nil {
