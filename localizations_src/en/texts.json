@@ -1,5 +1,6 @@
 {
   "hello": ":wave: Hey! I am **{{.botName}}**. Im capable of recording everything you say and transform it into an audio message.\\n:flag_gb: I am configured to talk to you in english.\\n:microphone2: To start recording, enter the channel **{{.voiceChannel}}** and start talking to me.\\n:sound: When you get out the channel, I will send the audio message.",
   "stats": ">>> :chart_with_upwards_trend: **Monthly stats**: \\n\\n:earth_africa: Global stats:\\n- {{.globalDuration}} seconds of audio sent\\n- {{.globalAmount}} audio files recorded\\n- Median duration of {{.globalMedianDuration}} seconds",
+  "stats-empty": "Start sending voice messages to have stats!",
   "duration": "Duration"
 }

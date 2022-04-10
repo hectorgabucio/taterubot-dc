@@ -95,7 +95,7 @@ func (service *StatsMessageCreator) send(interactionToken string, guildID string
 }
 
 func (service *StatsMessageCreator) sendEmptyInteraction(interactionToken string) error {
-	if err := service.discordClient.EditInteraction(interactionToken, "Start sending voice messages to have stats!"); err != nil {
+	if err := service.discordClient.EditInteraction(interactionToken, service.localization.Get("texts.stats-empty")); err != nil {
 		return fmt.Errorf("err sending interaction response, %w", err)
 	}
 	return nil
