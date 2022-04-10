@@ -39,6 +39,10 @@ func (server *Server) installInteractions() {
 			Name:        "taterubot",
 			Description: "I will say hi!",
 		},
+		{
+			Name:        "stats",
+			Description: "Let's see some cool stats about this discord server!",
+		},
 	}
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
 		"taterubot": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
@@ -49,6 +53,7 @@ func (server *Server) installInteractions() {
 				},
 			}); err != nil {
 				log.Println(err)
+				return
 			}
 			go func() {
 				err := server.commandBus.Dispatch(context.Background(), application.NewGreetingCommand(i.Token))
@@ -56,6 +61,24 @@ func (server *Server) installInteractions() {
 					log.Println("err greeting command", err)
 				}
 			}()
+		},
+		"stats": func(s *discordgo.Session, i *discordgo.InteractionCreate) {
+			if err := s.InteractionRespond(&discordgo.Interaction{ID: i.ID, Token: i.Token}, &discordgo.InteractionResponse{
+				Type: discordgo.InteractionResponseChannelMessageWithSource,
+				Data: &discordgo.InteractionResponseData{
+					Content: "...",
+				},
+			}); err != nil {
+				log.Println(err)
+				return
+			}
+			go func() {
+				err := server.commandBus.Dispatch(context.Background(), application.NewStatsCommand(i.Token, i.GuildID))
+				if err != nil {
+					log.Println("err stats command", err)
+				}
+			}()
+
 		},
 	}
 	guilds, err := server.session.UserGuilds(100, "", "")

@@ -94,9 +94,6 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
-	// eventBus := inmemory.NewEventBus()
-	// commandBus := inmemory.NewCommandBus()
-
 	eventBus, err := rabbitmq.NewEventBus(cfg.CloudAMQPUrl)
 	if err != nil {
 		log.Fatalln(err)
@@ -117,6 +114,7 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 
 	// APPLICATION LAYER
 	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
+	stats := application.NewStatsMessageCreator(discordClient, l, voiceDataRepo)
 	voice := application.NewVoiceRecorder(discordClient, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo, oggWriter)
 	embedAudioData := application.NewAddMetadataOnAudioSent(discordClient, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, voiceDataRepo, decoder, eventBus)
 	removeFiles := application.NewRemoveFilesWhenNotNeeded(fsRepo)
@@ -131,6 +129,9 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 
 	voiceCommandHandler := application.NewRecordingCommandHandler(voice)
 	commandBus.Register(application.RecordingCommandType, voiceCommandHandler)
+
+	statsCommandHandler := application.NewStatsCommandHandler(stats)
+	commandBus.Register(application.StatsCommandType, statsCommandHandler)
 
 	ctx, srv := server.NewServer(context.Background(), s, commandBus)
 	return ctx, srv, []Closer{
