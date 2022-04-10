@@ -13,6 +13,7 @@ const (
 
 type Client interface {
 	GetGuilds() ([]Guild, error)
+	GetUser(userID string) (User, error)
 	GetBotUsername() string
 	GetGuildChannels(guildID string) ([]Channel, error)
 	GetChannel(channelID string) (Channel, error)
@@ -23,6 +24,19 @@ type Client interface {
 	JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (voice *VoiceConnection, err error)
 	EndVoiceConnection(voice *VoiceConnection) error
 	EditInteraction(token string, message string) error
+	EditInteractionComplex(token string, edit ComplexInteractionEdit) error
+}
+
+type ComplexInteractionEdit struct {
+	Content string
+	Embeds  []*MessageEmbed
+}
+
+type User struct {
+	ID          string
+	Username    string
+	AvatarURL   string
+	AccentColor int
 }
 
 type Guild struct {
@@ -49,6 +63,12 @@ type MessageEmbed struct {
 	Color       int
 	Thumbnail   string
 	Fields      []*MessageEmbedField
+	Author      *MessageEmbedAuthor
+}
+
+type MessageEmbedAuthor struct {
+	Name    string
+	IconURL string
 }
 
 type MessageEmbedField struct {

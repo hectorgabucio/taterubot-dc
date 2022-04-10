@@ -64,14 +64,11 @@ func NewStatsMessageCreator(discord discord.Client, localization *localizations.
 
 func (service *StatsMessageCreator) send(interactionToken string, guildID string) error {
 	log.Println("received stats command", interactionToken, guildID)
-
 	now := time.Now()
 	currentYear, currentMonth, _ := now.Date()
 	currentLocation := now.Location()
-
 	firstOfMonth := time.Date(currentYear, currentMonth, 1, 0, 0, 0, 0, currentLocation)
 	lastOfMonth := firstOfMonth.AddDate(0, 1, -1)
-
 	onRange, err := service.voiceDataRepo.GetOnRange(guildID, firstOfMonth, lastOfMonth)
 	if err != nil {
 		return fmt.Errorf("err getting voice range, %w", err)
@@ -79,19 +76,112 @@ func (service *StatsMessageCreator) send(interactionToken string, guildID string
 	if len(onRange) == 0 {
 		return service.sendEmptyInteraction(interactionToken)
 	}
-
-	globalDuration := 0
-	for _, voiceData := range onRange {
-		globalDuration += voiceData.Duration
+	message, err := service.buildStatsMessage(onRange)
+	if err != nil {
+		return err
 	}
-	medianDuration := globalDuration / len(onRange)
-	message := service.localization.Get("texts.stats",
-		&localizations.Replacements{"globalDuration": globalDuration, "globalAmount": len(onRange), "globalMedianDuration": medianDuration})
-	if err := service.discordClient.EditInteraction(interactionToken, message); err != nil {
+	if err := service.discordClient.EditInteractionComplex(interactionToken, message); err != nil {
 		log.Println(err)
 		return fmt.Errorf("err sending interaction response, %w", err)
 	}
 	return nil
+}
+
+func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceData) (discord.ComplexInteractionEdit, error) {
+	globalDuration := 0
+
+	type userData struct {
+		audiosSent        int
+		totalAudioSeconds int
+
+		longestAudioDuration int
+	}
+	usersData := make(map[string]*userData)
+
+	for _, voiceData := range voiceStats {
+		globalDuration += voiceData.Duration
+		_, ok := usersData[voiceData.UserID]
+		if !ok {
+			usersData[voiceData.UserID] = &userData{
+				audiosSent:           0,
+				totalAudioSeconds:    0,
+				longestAudioDuration: 0,
+			}
+		}
+		user := usersData[voiceData.UserID]
+		user.audiosSent++
+		user.totalAudioSeconds += voiceData.Duration
+		if voiceData.Duration > user.longestAudioDuration {
+			user.longestAudioDuration = voiceData.Duration
+		}
+	}
+
+	var longestAudioUser string
+	var mostAudiosSentUser string
+	for userID, userData := range usersData {
+		if longestAudioUser == "" {
+			longestAudioUser = userID
+		}
+		if mostAudiosSentUser == "" {
+			mostAudiosSentUser = userID
+		}
+		if userData.audiosSent > usersData[mostAudiosSentUser].audiosSent {
+			mostAudiosSentUser = userID
+		}
+	}
+
+	embeds := make([]*discord.MessageEmbed, 0)
+
+	user, err := service.discordClient.GetUser(longestAudioUser)
+	if err != nil {
+		return discord.ComplexInteractionEdit{}, err
+	}
+	embeds = append(embeds, &discord.MessageEmbed{
+		Title:       "Longest audio duration",
+		Description: fmt.Sprintf("<@%s>", user.ID),
+		Color:       user.AccentColor,
+		Thumbnail:   "https://www.emojirequest.com/images/TalkingTooMuchEmoji.jpg",
+		Fields: []*discord.MessageEmbedField{
+			{
+				Name:  "Achievement",
+				Value: fmt.Sprintf("He managed to talk for %d seconds straight. Respect!", usersData[longestAudioUser].longestAudioDuration),
+			},
+		},
+		Author: &discord.MessageEmbedAuthor{
+			Name:    user.Username,
+			IconURL: user.AvatarURL,
+		},
+	})
+
+	user, err = service.discordClient.GetUser(mostAudiosSentUser)
+	if err != nil {
+		return discord.ComplexInteractionEdit{}, err
+	}
+	embeds = append(embeds, &discord.MessageEmbed{
+		Title:       "Largest quantity of audios sent",
+		Description: fmt.Sprintf("<@%s>", user.ID),
+		Color:       user.AccentColor,
+		Thumbnail:   "https://www.emojirequest.com/images/TalkingTooMuchEmoji.jpg",
+		Fields: []*discord.MessageEmbedField{
+			{
+				Name:  "Achievement",
+				Value: fmt.Sprintf("He sent %d audios, he must love this bot!", usersData[user.ID].audiosSent),
+			},
+		},
+		Author: &discord.MessageEmbedAuthor{
+			Name:    user.Username,
+			IconURL: user.AvatarURL,
+		},
+	})
+
+	medianDuration := globalDuration / len(voiceStats)
+	message := service.localization.Get("texts.stats",
+		&localizations.Replacements{"globalDuration": globalDuration, "globalAmount": len(voiceStats), "globalMedianDuration": medianDuration})
+
+	return discord.ComplexInteractionEdit{
+		Content: message,
+		Embeds:  embeds,
+	}, nil
 }
 
 func (service *StatsMessageCreator) sendEmptyInteraction(interactionToken string) error {

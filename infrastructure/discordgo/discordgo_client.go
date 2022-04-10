@@ -12,6 +12,56 @@ type Client struct {
 	session *discordgo.Session
 }
 
+func (c *Client) GetUser(userID string) (discord.User, error) {
+	user, err := c.session.User(userID)
+	if err != nil {
+		return discord.User{}, fmt.Errorf("err.discordgo.user:%w", err)
+	}
+	return discord.User{
+		ID:          user.ID,
+		Username:    user.Username,
+		AvatarURL:   user.AvatarURL(""),
+		AccentColor: user.AccentColor,
+	}, nil
+}
+
+func (c *Client) EditInteractionComplex(token string, edit discord.ComplexInteractionEdit) error {
+	embeds := make([]*discordgo.MessageEmbed, len(edit.Embeds))
+	for i, embed := range edit.Embeds {
+		fields := make([]*discordgo.MessageEmbedField, len(embed.Fields))
+		for j, field := range embed.Fields {
+			fields[j] = &discordgo.MessageEmbedField{
+				Name:   field.Name,
+				Value:  field.Value,
+				Inline: false,
+			}
+		}
+		embeds[i] = &discordgo.MessageEmbed{
+			Title:       embed.Title,
+			Description: embed.Description,
+			Color:       embed.Color,
+			Thumbnail: &discordgo.MessageEmbedThumbnail{
+				URL: embed.Thumbnail,
+			},
+			Author: &discordgo.MessageEmbedAuthor{
+				Name:    embed.Author.Name,
+				IconURL: embed.Author.IconURL,
+			},
+			Fields: fields,
+		}
+	}
+	_, err := c.session.InteractionResponseEdit(c.session.State.User.ID, &discordgo.Interaction{Token: token}, &discordgo.WebhookEdit{
+		Content: edit.Content,
+		Embeds:  embeds,
+		// TODO https://stackoverflow.com/questions/46734519/how-to-use-local-file-as-thumbnail-in-discordjs-embedded-message
+	})
+	if err != nil {
+		return fmt.Errorf("discordgo.interaction.edit.complex: %w", err)
+	}
+	return nil
+
+}
+
 func NewClient(session *discordgo.Session) *Client {
 	return &Client{session: session}
 }
