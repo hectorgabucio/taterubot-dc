@@ -1,4 +1,11 @@
 {
-  "hello": ":wave: Hola! Soy **{{.botName}}**. Soy un bot capaz de grabar lo que dices y transformarlo en mensajes de voz.\\n:flag_es: Estoy configurado para responderte en castellano.\\n:microphone2: Para empezar a grabar, entra en el canal **{{.voiceChannel}}** y empieza a hablarme.\\n:sound: Cuando salgas del mismo, mandaré el mensaje de voz.",
-  "duration": "Duración"
+  "hello": ">>> :wave: Hola! Soy **{{.botName}}**. Soy un bot capaz de grabar lo que dices y transformarlo en mensajes de voz.\\n:flag_es: Estoy configurado para responderte en castellano.\\n:microphone2: Para empezar a grabar, entra en el canal **{{.voiceChannel}}** y empieza a hablarme.\\n:sound: Cuando salgas del mismo, mandaré el mensaje de voz.",
+  "duration": "Duración",
+  "stats": ">>> :chart_with_upwards_trend: **Estadísticas del mes**: \\n\\n:earth_africa: Estadísticas generales:\\n- Un total de {{.globalDuration}} segundos enviados como audio\\n- {{.globalAmount}} archivos de audio grabados\\n- Duración media de {{.globalMedianDuration}} segundos",
+  "stats-empty": ">>> :tired_face: Empieza a mandar mensajes de voz para tener estadísticas!",
+  "achievement": ":trophy: Logro :trophy: ",
+  "achievement_longest_audio_title": ":lungs: Experto en aguantar la respiración",
+  "achievement_longest_audio_description": "Ha podido hablar durante **{{.seconds}} segundos ** de golpe. Respira un poco!",
+  "achievement_most_audios_sent_title": ":speaking_head: El metralletas",
+  "achievement_most_audios_sent_description": "Ha mandado **{{.audios}} audios**. Por favor, deja de darme trabajo!"
 }

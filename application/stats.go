@@ -137,14 +137,14 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 		return discord.ComplexInteractionEdit{}, err
 	}
 	embeds = append(embeds, &discord.MessageEmbed{
-		Title:       "Longest audio duration",
+		Title:       service.localization.Get("texts.achievement_longest_audio_title"),
 		Description: fmt.Sprintf("<@%s>", user.ID),
 		Color:       user.AccentColor,
-		Thumbnail:   "https://www.emojirequest.com/images/TalkingTooMuchEmoji.jpg",
+		Thumbnail:   "https://images.emojiterra.com/google/android-11/512px/1fac1.png",
 		Fields: []*discord.MessageEmbedField{
 			{
-				Name:  "Achievement",
-				Value: fmt.Sprintf("He managed to talk for %d seconds straight. Respect!", usersData[longestAudioUser].longestAudioDuration),
+				Name:  service.localization.Get("texts.achievement"),
+				Value: service.localization.Get("texts.achievement_longest_audio_description", &localizations.Replacements{"seconds": usersData[longestAudioUser].longestAudioDuration}),
 			},
 		},
 		Author: &discord.MessageEmbedAuthor{
@@ -158,14 +158,14 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 		return discord.ComplexInteractionEdit{}, err
 	}
 	embeds = append(embeds, &discord.MessageEmbed{
-		Title:       "Largest quantity of audios sent",
+		Title:       service.localization.Get("texts.achievement_most_audios_sent_title"),
 		Description: fmt.Sprintf("<@%s>", user.ID),
 		Color:       user.AccentColor,
 		Thumbnail:   "https://www.emojirequest.com/images/TalkingTooMuchEmoji.jpg",
 		Fields: []*discord.MessageEmbedField{
 			{
-				Name:  "Achievement",
-				Value: fmt.Sprintf("He sent %d audios, he must love this bot!", usersData[user.ID].audiosSent),
+				Name:  service.localization.Get("texts.achievement"),
+				Value: service.localization.Get("texts.achievement_most_audios_sent_description", &localizations.Replacements{"audios": usersData[user.ID].audiosSent}),
 			},
 		},
 		Author: &discord.MessageEmbedAuthor{
