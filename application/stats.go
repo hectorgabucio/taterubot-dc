@@ -135,7 +135,7 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 
 	user, err := service.discordClient.GetUser(longestAudioUser)
 	if err != nil {
-		return discord.ComplexInteractionEdit{}, err
+		return discord.ComplexInteractionEdit{}, fmt.Errorf("err.stats.get.user:%w", err)
 	}
 	embeds = append(embeds, service.buildAchievementEmbed(user,
 		service.localization.Get("texts.achievement_longest_audio_title"),
@@ -144,7 +144,7 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 
 	user, err = service.discordClient.GetUser(mostAudiosSentUser)
 	if err != nil {
-		return discord.ComplexInteractionEdit{}, err
+		return discord.ComplexInteractionEdit{}, fmt.Errorf("err.stats.get.user:%w", err)
 	}
 	embeds = append(embeds, service.buildAchievementEmbed(user,
 		service.localization.Get("texts.achievement_most_audios_sent_title"),
@@ -153,7 +153,7 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 
 	guildUsers, err := service.discordClient.GetGuildUsers(guildID)
 	if err != nil {
-		return discord.ComplexInteractionEdit{}, err
+		return discord.ComplexInteractionEdit{}, fmt.Errorf("err.stats.get.guild.users:%w", err)
 	}
 	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 	randomUser := guildUsers[rand.Intn(len(guildUsers))]
