@@ -13,6 +13,7 @@ const (
 
 type Client interface {
 	GetGuilds() ([]Guild, error)
+	GetGuildUsers(guildID string) ([]User, error)
 	GetUser(userID string) (User, error)
 	GetBotUsername() string
 	GetGuildChannels(guildID string) ([]Channel, error)

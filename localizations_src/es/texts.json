@@ -7,5 +7,11 @@
   "achievement_longest_audio_title": ":lungs: Experto en aguantar la respiración",
   "achievement_longest_audio_description": "Ha podido hablar durante **{{.seconds}} segundos ** de golpe. Respira un poco!",
   "achievement_most_audios_sent_title": ":speaking_head: El metralletas",
-  "achievement_most_audios_sent_description": "Ha mandado **{{.audios}} audios**. Por favor, deja de darme trabajo!"
+  "achievement_most_audios_sent_description": "Ha mandado **{{.audios}} audios**. Por favor, deja de darme trabajo!",
+  "achievement_random_title": ":flushed: Porque te lo mereces, y porque me da la gana!",
+  "achievement_random_description_1": "Has sido elegido aleatoriamente para ganar este premio. Felicidades!",
+  "achievement_random_description_2": "Mi creador no me ha programado bien, así que teoricamente puedo acabar dándome este premio a mi mismo, :robot: ja ja ja :robot: ",
+  "achievement_random_description_3": "Hasta esta descripción es aleatoria. No es eso fascinante?",
+  "achievement_random_description_4": "Porque eres el mejor de los mejores, y punto.",
+  "achievement_random_description_5": "Has ganado este premio, y ya. Puede que la próxima vez lo gane otra persona, ja ja ja :robot:"
 }

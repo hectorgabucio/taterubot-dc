@@ -12,6 +12,23 @@ type Client struct {
 	session *discordgo.Session
 }
 
+func (c *Client) GetGuildUsers(guildID string) ([]discord.User, error) {
+	members, err := c.session.GuildMembers(guildID, "", 1000)
+	if err != nil {
+		return nil, fmt.Errorf("err.discordgo.listusers:%w", err)
+	}
+	users := make([]discord.User, len(members))
+	for i, member := range members {
+		users[i] = discord.User{
+			ID:          member.User.ID,
+			Username:    member.User.Username,
+			AvatarURL:   member.User.AvatarURL(""),
+			AccentColor: member.User.AccentColor,
+		}
+	}
+	return users, nil
+}
+
 func (c *Client) GetUser(userID string) (discord.User, error) {
 	user, err := c.session.User(userID)
 	if err != nil {

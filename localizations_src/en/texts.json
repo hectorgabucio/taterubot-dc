@@ -7,5 +7,11 @@
   "achievement_longest_audio_title": ":lungs: Apnea expert",
   "achievement_longest_audio_description": "He managed to talk for **{{.seconds}} seconds ** straight. Respect!",
   "achievement_most_audios_sent_title": ":speaking_head: The spammer",
-  "achievement_most_audios_sent_description": "He sent **{{.audios}} audios**, please, give me a break!"
+  "achievement_most_audios_sent_description": "He sent **{{.audios}} audios**, please, give me a break!",
+  "achievement_random_title": ":flushed: Because you deserve it!",
+  "achievement_random_description_1": "You have been randomly selected to win this achievement. Congrats!",
+  "achievement_random_description_2": "My creator didn't implement this correctly, so theorically I could end up giving this achievement to myself, ha ha ha",
+  "achievement_random_description_3": "Even this achievement description is randomly chosen. Isn't that fascinating?",
+  "achievement_random_description_4": "Because you are the best of the best",
+  "achievement_random_description_5": "You won this achievement. Maybe next time other person wins it, ha ha ha"
 }

@@ -9,6 +9,7 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"log"
+	"math/rand"
 	"time"
 )
 
@@ -76,7 +77,7 @@ func (service *StatsMessageCreator) send(interactionToken string, guildID string
 	if len(onRange) == 0 {
 		return service.sendEmptyInteraction(interactionToken)
 	}
-	message, err := service.buildStatsMessage(onRange)
+	message, err := service.buildStatsMessage(onRange, guildID)
 	if err != nil {
 		return err
 	}
@@ -87,7 +88,7 @@ func (service *StatsMessageCreator) send(interactionToken string, guildID string
 	return nil
 }
 
-func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceData) (discord.ComplexInteractionEdit, error) {
+func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceData, guildID string) (discord.ComplexInteractionEdit, error) {
 	globalDuration := 0
 
 	type userData struct {
@@ -149,6 +150,27 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 		service.localization.Get("texts.achievement_most_audios_sent_title"),
 		"https://www.emojirequest.com/images/TalkingTooMuchEmoji.jpg",
 		service.localization.Get("texts.achievement_most_audios_sent_description", &localizations.Replacements{"audios": usersData[user.ID].audiosSent})))
+
+	guildUsers, err := service.discordClient.GetGuildUsers(guildID)
+	if err != nil {
+		return discord.ComplexInteractionEdit{}, err
+	}
+	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
+	randomUser := guildUsers[rand.Intn(len(guildUsers))]
+	log.Println(randomUser)
+
+	randomDescriptions := []string{
+		"texts.achievement_random_description_1",
+		"texts.achievement_random_description_2",
+		"texts.achievement_random_description_3",
+		"texts.achievement_random_description_4",
+		"texts.achievement_random_description_5",
+	}
+	randomDescription := randomDescriptions[rand.Intn(len(randomDescriptions))]
+	embeds = append(embeds, service.buildAchievementEmbed(user,
+		service.localization.Get("texts.achievement_random_title"),
+		"https://images.emojiterra.com/twitter/v13.1/512px/1f3b2.png",
+		service.localization.Get(randomDescription)))
 
 	medianDuration := globalDuration / len(voiceStats)
 	message := service.localization.Get("texts.stats",
