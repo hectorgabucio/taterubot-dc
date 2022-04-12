@@ -3,6 +3,7 @@ services:
   rabbitmq3:
     container_name: "rabbitmq"
     image: rabbitmq:3.8-management-alpine
+    restart: on-failure
     environment:
       - RABBITMQ_DEFAULT_USER=myuser
       - RABBITMQ_DEFAULT_PASS=mypassword
@@ -18,7 +19,7 @@ services:
       - '15672:15672'
   db:
     image: postgres
-    restart: always
+    restart: on-failure
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U test" ]
       interval: 5s

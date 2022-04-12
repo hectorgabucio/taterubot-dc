@@ -8,7 +8,7 @@ check-style:
 
 ## Builds project
 .PHONY: build
-build: generate
+build:
 	go build .
 
 ## Generates code

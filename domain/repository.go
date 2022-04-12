@@ -30,5 +30,5 @@ type VoiceData struct {
 // TODO save timestamp, voice audio name, user id, duration,
 type VoiceDataRepository interface {
 	Save(data VoiceData) error
-	GetOnRange(guildID string, from time.Time, to time.Time) []VoiceData
+	GetOnRange(guildID string, from time.Time, to time.Time) ([]VoiceData, error)
 }
