@@ -129,6 +129,10 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 		if userData.audiosSent > usersData[mostAudiosSentUser].audiosSent {
 			mostAudiosSentUser = userID
 		}
+
+		if userData.longestAudioDuration > usersData[longestAudioUser].longestAudioDuration {
+			longestAudioUser = userID
+		}
 	}
 
 	embeds := make([]*discord.MessageEmbed, 0)
