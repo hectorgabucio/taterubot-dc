@@ -161,8 +161,6 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 	}
 	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
 	randomUser := guildUsers[rand.Intn(len(guildUsers))]
-	log.Println(randomUser)
-
 	randomDescriptions := []string{
 		"texts.achievement_random_description_1",
 		"texts.achievement_random_description_2",
@@ -171,7 +169,7 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 		"texts.achievement_random_description_5",
 	}
 	randomDescription := randomDescriptions[rand.Intn(len(randomDescriptions))]
-	embeds = append(embeds, service.buildAchievementEmbed(user,
+	embeds = append(embeds, service.buildAchievementEmbed(randomUser,
 		service.localization.Get("texts.achievement_random_title"),
 		"https://images.emojiterra.com/twitter/v13.1/512px/1f3b2.png",
 		service.localization.Get(randomDescription)))
