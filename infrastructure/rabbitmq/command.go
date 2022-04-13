@@ -3,7 +3,6 @@ package rabbitmq
 import (
 	"bytes"
 	"context"
-	"encoding/gob"
 	"fmt"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/streadway/amqp"
@@ -36,58 +35,23 @@ func (c *CommandBus) Close() error {
 }
 
 func (c *CommandBus) Dispatch(ctx context.Context, command command.Command) error {
-	var b bytes.Buffer
-
-	gob.Register(command)
-	if err := gob.NewEncoder(&b).Encode(&command); err != nil {
-		return fmt.Errorf("err encoding command to buffer gob, %w", err)
+	b, err := encode(command)
+	if err != nil {
+		return fmt.Errorf("err encoding command, %w", err)
 	}
-	err := c.Channel.Publish(exchange, string(command.Type()), false, false, amqp.Publishing{
+	if err := c.Channel.Publish(exchange, string(command.Type()), false, false, amqp.Publishing{
 		AppId:       appID,
-		ContentType: encodingType, // XXX: We will revisit this in future episodes
+		ContentType: encodingType,
 		Body:        b.Bytes(),
 		Timestamp:   time.Now(),
-	})
-	if err != nil {
+	}); err != nil {
 		return fmt.Errorf("err publishing command to topic, %w", err)
 	}
 	return nil
 }
 
 func (c *CommandBus) Register(t command.Type, handler command.Handler) {
-	q, err := c.Channel.QueueDeclare(
-		fmt.Sprintf("QUEUE-%s", t), // name
-		false,                      // durable
-		false,                      // delete when unused
-		true,                       // exclusive
-		false,                      // no-wait
-		nil,                        // arguments
-	)
-	if err != nil {
-		log.Fatal("err declaring queue", err)
-	}
-	err = c.Channel.QueueBind(
-		q.Name,    // queue name
-		string(t), // routing key
-		exchange,  // exchange
-		false,
-		nil,
-	)
-	if err != nil {
-		log.Fatalf("channel.QueueBind %v", err)
-	}
-	msgs, err := c.Channel.Consume(
-		q.Name,                            // queue
-		fmt.Sprintf("%s-%s", consumer, t), // consumer
-		false,                             // auto-ack
-		false,                             // exclusive
-		false,                             // no-local
-		false,                             // no-wait
-		nil,                               // args
-	)
-	if err != nil {
-		log.Fatalf("channel.Consume %v", err)
-	}
+	msgs := initializeChannelConsumption(c.Channel, string(t))
 	go handleCommands(msgs, handler)
 }
 
@@ -95,8 +59,8 @@ func handleCommands(commands <-chan amqp.Delivery, handler command.Handler) {
 	for delivery := range commands {
 		var cmd command.Command
 		buf := bytes.NewBuffer(delivery.Body)
-		if err := gob.NewDecoder(buf).Decode(&cmd); err != nil {
-			log.Printf("err decoding command gob, %v", err)
+		if err := decode(buf, &cmd); err != nil {
+			log.Printf("err decoding command, %v", err)
 			err := delivery.Ack(false)
 			if err != nil {
 				log.Println("err acking failed decoding", err)

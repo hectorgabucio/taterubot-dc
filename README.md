@@ -1,8 +1,8 @@
 # Backlog
-- better directory structure to localization
-- better shared code amqp rabbit
 - tests
 - final readme with gif/video demo
+- clean code of comments
+- better logging (events and commands only)
 
 # Known bugs and limitations
 - Sometimes race condition if you try to record a very short audio.
