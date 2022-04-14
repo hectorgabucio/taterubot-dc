@@ -68,7 +68,6 @@ func handleCommands(commands <-chan amqp.Delivery, handler command.Handler) {
 		}
 
 		log.Println("handling command", cmd)
-		// TODO had to do this because i use same command type for starting and ending recording, i should separate into different command types
 		go func() {
 			err := handler.Handle(context.Background(), cmd)
 			if err != nil {

@@ -34,8 +34,7 @@ func (w *Writer) WriteVoice(writer io.Closer, packet *discord.Packet) error {
 func createPionRTPPacket(p *discord.Packet) *rtp.Packet {
 	return &rtp.Packet{
 		Header: rtp.Header{
-			Version: 2,
-			// Taken from Discord voice docs
+			Version:        2,
 			PayloadType:    0x78,
 			SequenceNumber: p.Sequence,
 			Timestamp:      p.Timestamp,

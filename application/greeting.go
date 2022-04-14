@@ -81,7 +81,6 @@ func (service *GreetingMessageCreator) send(interactionToken string) error {
 			}
 		}
 
-		// if no voice channel found, try to create it if possible
 		if voiceChannelID == "" {
 			createdChannel, err := service.discordClient.CreateChannel(guild.ID, service.channelName, discord.ChannelTypeGuildVoice, 2)
 			if err == nil {

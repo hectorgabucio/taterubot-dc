@@ -2,10 +2,8 @@ package discord
 
 import "io"
 
-// ChannelType is the type of a Channel.
 type ChannelType int
 
-// Block contains known ChannelType values.
 const (
 	ChannelTypeGuildText  ChannelType = 0
 	ChannelTypeGuildVoice ChannelType = 2
@@ -77,7 +75,6 @@ type MessageEmbedField struct {
 	Value string `json:"value,omitempty"`
 }
 
-// A Packet contains the headers and content of a received voice packet.
 type Packet struct {
 	SSRC      uint32
 	Sequence  uint16
@@ -88,7 +85,6 @@ type Packet struct {
 }
 
 type VoiceConnection struct {
-	// TODO enhance this
 	Internals     any
 	VoiceReceiver chan *Packet
 }

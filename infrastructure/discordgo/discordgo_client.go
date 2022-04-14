@@ -70,7 +70,6 @@ func (c *Client) EditInteractionComplex(token string, edit discord.ComplexIntera
 	_, err := c.session.InteractionResponseEdit(c.session.State.User.ID, &discordgo.Interaction{Token: token}, &discordgo.WebhookEdit{
 		Content: edit.Content,
 		Embeds:  embeds,
-		// TODO https://stackoverflow.com/questions/46734519/how-to-use-local-file-as-thumbnail-in-discordjs-embedded-message
 	})
 	if err != nil {
 		return fmt.Errorf("discordgo.interaction.edit.complex: %w", err)
@@ -100,7 +99,6 @@ func (c *Client) GetGuilds() ([]discord.Guild, error) {
 	}
 
 	guilds := make([]discord.Guild, len(infraGuilds))
-	// TODO create a map function
 	for i, infraGuild := range infraGuilds {
 		newGuild := discord.Guild{
 			ID:   infraGuild.ID,
@@ -218,7 +216,6 @@ func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (v
 }
 
 func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
-	// TODO only solution i see to race condition in discordgo lib
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("recovered", r)

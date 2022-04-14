@@ -69,7 +69,7 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	viper.SetDefault("CHANNEL_NAME", "TATERU")
 
 	viper.SetConfigFile(`config.json`)
-	viper.SetConfigType("json") // Look for specific type
+	viper.SetConfigType("json")
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatalln(err)
 	}
@@ -91,7 +91,6 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("error getting new bot client, %w", err)
 	}
-	// We only really care about receiving voice state updates.
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
 	eventBus, err := rabbitmq.NewEventBus(cfg.CloudAMQPUrl)

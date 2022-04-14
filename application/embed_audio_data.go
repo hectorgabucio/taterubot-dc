@@ -94,13 +94,11 @@ func (handler *AddMetadataOnAudioSent) getDominantAvatarColor(url string, fileNa
 }
 
 func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, error) {
-	// Step 1: Load the image
 	img, err := handler.loadImage(fmt.Sprintf("%s.png", fileName))
 	if err != nil {
 		return 0, fmt.Errorf("failed to load image: %w", err)
 	}
 
-	// Step 2: Process it
 	colours, err := prominentcolor.Kmeans(img)
 	if err != nil {
 		return 0, fmt.Errorf("failed to process image: %w", err)

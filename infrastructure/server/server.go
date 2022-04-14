@@ -96,8 +96,6 @@ func (server *Server) installInteractions() {
 		}
 	}
 
-	// server.session.ApplicationCommandDelete(server.session.State.User.ID, "", applicationCommands[0].ID)
-
 	server.session.AddHandler(func(s *discordgo.Session, i *discordgo.InteractionCreate) {
 		if h, ok := commandHandlers[i.ApplicationCommandData().Name]; ok {
 			h(s, i)
@@ -121,7 +119,6 @@ func (server *Server) registerHandlers() {
 		}
 
 		if r.BeforeUpdate != nil {
-			// to avoid messing with muting and unmuting
 			if (r.SelfMute == true && r.BeforeUpdate.SelfMute == false) || (r.SelfMute == false && r.BeforeUpdate.SelfMute == true) {
 				return
 			}

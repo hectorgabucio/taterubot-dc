@@ -156,7 +156,7 @@ func (service *StatsMessageCreator) buildStatsMessage(voiceStats []domain.VoiceD
 	if err != nil {
 		return discord.ComplexInteractionEdit{}, fmt.Errorf("err.stats.get.guild.users:%w", err)
 	}
-	rand.Seed(time.Now().Unix()) // initialize global pseudo random generator
+	rand.Seed(time.Now().Unix())
 	randomUser := guildUsers[rand.Intn(len(guildUsers))]
 	randomDescriptions := []string{
 		"texts.achievement_random_description_1",

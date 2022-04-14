@@ -157,7 +157,6 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, userID string,
 		i++
 	}
 
-	// TODO event recording file created
 	usecase.sendAudioFiles(guildID, userID, mp3Names, username, avatarURL)
 
 	return mp3Names
