@@ -90,7 +90,7 @@ func (handler *AddMetadataOnAudioSent) getDominantAvatarColor(url string, fileNa
 	}
 	color, err := handler.prominentColor(fileName)
 	if err != nil {
-		fmt.Printf("couldnt get prominent color: %v", err)
+		log.Println("couldnt get prominent color,", err)
 		return 0
 	}
 	return color
