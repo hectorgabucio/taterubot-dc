@@ -7,7 +7,6 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
-	"log"
 )
 
 const GreetingCommandType command.Type = "command.greeting"
@@ -62,14 +61,12 @@ func NewGreetingMessageCreator(discord discord.Client, localization *localizatio
 func (service *GreetingMessageCreator) send(interactionToken string) error {
 	guilds, err := service.discordClient.GetGuilds()
 	if err != nil {
-		log.Println(err)
 		return fmt.Errorf("err getting guilds, %w", err)
 	}
 	botUsername := service.discordClient.GetBotUsername()
 	for _, guild := range guilds {
 		channels, err := service.discordClient.GetGuildChannels(guild.ID)
 		if err != nil {
-			log.Println(err)
 			return fmt.Errorf("err getting guild channels, %w", err)
 		}
 
@@ -98,7 +95,6 @@ func (service *GreetingMessageCreator) send(interactionToken string) error {
 		}
 		greetingMessage := service.localization.Get("texts.hello", &localizations.Replacements{"voiceChannel": voiceChannelReplacement, "botName": botUsername})
 		if err := service.discordClient.EditInteraction(interactionToken, greetingMessage); err != nil {
-			log.Println(err)
 			return fmt.Errorf("err sending interaction response, %w", err)
 		}
 
