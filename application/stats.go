@@ -8,7 +8,6 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
-	"log"
 	"math/rand"
 	"time"
 )
@@ -64,7 +63,6 @@ func NewStatsMessageCreator(discord discord.Client, localization *localizations.
 }
 
 func (service *StatsMessageCreator) send(interactionToken string, guildID string) error {
-	log.Println("received stats command", interactionToken, guildID)
 	now := time.Now()
 	currentYear, currentMonth, _ := now.Date()
 	currentLocation := now.Location()
@@ -82,7 +80,6 @@ func (service *StatsMessageCreator) send(interactionToken string, guildID string
 		return err
 	}
 	if err := service.discordClient.EditInteractionComplex(interactionToken, message); err != nil {
-		log.Println(err)
 		return fmt.Errorf("err sending interaction response, %w", err)
 	}
 	return nil

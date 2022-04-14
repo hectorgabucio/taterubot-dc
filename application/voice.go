@@ -93,7 +93,6 @@ func (usecase *VoiceRecorder) handleVoiceRecording(userID string, nowChannelID s
 
 	channel, err := usecase.discord.GetChannel(nowChannelID)
 	if err != nil {
-		log.Println(err)
 		return fmt.Errorf("err getting channel, %w", err)
 	}
 	if channel.Name != usecase.configChannelName {
@@ -107,13 +106,11 @@ func (usecase *VoiceRecorder) handleVoiceRecording(userID string, nowChannelID s
 func (usecase *VoiceRecorder) recordAndSend(userID string, guildID string, channelID string, username string, avatarURL string, done chan bool) error {
 	v, err := usecase.discord.JoinVoiceChannel(guildID, channelID, true, false)
 	if err != nil {
-		log.Println("failed to join voice channel:", err)
 		return fmt.Errorf("err joining voice channel, %w", err)
 	}
 
 	go func() {
 		<-done
-		log.Println("done recording")
 		err := usecase.discord.EndVoiceConnection(v)
 		if err != nil {
 			log.Println(err)
@@ -142,8 +139,6 @@ func (usecase *VoiceRecorder) handleVoice(c chan *discord.Packet, userID string,
 			log.Printf("failed to write to file %d.ogg, giving up on recording: %v\n", p.SSRC, err)
 		}
 	}
-
-	log.Println("done listening voice")
 
 	mp3Names := make([]string, len(files))
 	i := 0

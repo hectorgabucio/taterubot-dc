@@ -27,7 +27,6 @@ func NewServer(ctx context.Context, session *discordgo.Session, commandBus comma
 
 func (server *Server) Close() error {
 	if err := server.session.Close(); err != nil {
-		log.Println("err closing session", err)
 		return fmt.Errorf("server.close:%w", err)
 	}
 	return nil
@@ -91,7 +90,7 @@ func (server *Server) installInteractions() {
 		for i, v := range commands {
 			cmd, err := server.session.ApplicationCommandCreate(server.session.State.User.ID, guild.ID, v)
 			if err != nil {
-				log.Panicf("Cannot create '%v' command: %v", v.Name, err)
+				log.Fatalf("Cannot create '%v' command: %v", v.Name, err)
 			}
 			registeredCommands[i] = cmd
 		}
