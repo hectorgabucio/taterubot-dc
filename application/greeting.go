@@ -96,8 +96,6 @@ func (service *GreetingMessageCreator) send(interactionToken string) error {
 		if err := service.discordClient.EditInteraction(interactionToken, greetingMessage); err != nil {
 			return fmt.Errorf("err sending interaction response, %w", err)
 		}
-
-		break
 	}
 	return nil
 }
