@@ -57,6 +57,9 @@ github.com/aws/aws-sdk-go/service/sts/stsiface
 # github.com/bwmarrin/discordgo v0.24.0
 ## explicit; go 1.13
 github.com/bwmarrin/discordgo
+# github.com/davecgh/go-spew v1.1.1
+## explicit
+github.com/davecgh/go-spew/spew
 # github.com/faiface/beep v1.1.0
 ## explicit; go 1.14
 github.com/faiface/beep
@@ -116,6 +119,10 @@ github.com/jmespath/go-jmespath
 ## explicit; go 1.10
 github.com/jmoiron/sqlx
 github.com/jmoiron/sqlx/reflectx
+# github.com/joho/godotenv v1.4.0
+## explicit; go 1.12
+github.com/joho/godotenv
+github.com/joho/godotenv/autoload
 # github.com/lib/pq v1.10.5
 ## explicit; go 1.13
 github.com/lib/pq
@@ -152,6 +159,9 @@ github.com/pion/webrtc/v3/pkg/media/oggwriter
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/pmezard/go-difflib v1.0.0
+## explicit
+github.com/pmezard/go-difflib/difflib
 # github.com/spf13/afero v1.6.0
 ## explicit; go 1.13
 github.com/spf13/afero
@@ -176,6 +186,13 @@ github.com/spf13/viper/internal/encoding/yaml
 # github.com/streadway/amqp v1.0.0
 ## explicit; go 1.10
 github.com/streadway/amqp
+# github.com/stretchr/objx v0.2.0
+## explicit; go 1.12
+github.com/stretchr/objx
+# github.com/stretchr/testify v1.7.1
+## explicit; go 1.13
+github.com/stretchr/testify/assert
+github.com/stretchr/testify/mock
 # github.com/subosito/gotenv v1.2.0
 ## explicit
 github.com/subosito/gotenv
@@ -210,3 +227,6 @@ gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.4.0
 ## explicit; go 1.15
 gopkg.in/yaml.v2
+# gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+## explicit
+gopkg.in/yaml.v3

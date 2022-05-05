@@ -5,8 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
+
 	"github.com/bwmarrin/discordgo"
 	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/postgres"
 	"github.com/hectorgabucio/taterubot-dc/application"
 	"github.com/hectorgabucio/taterubot-dc/config"
 	"github.com/hectorgabucio/taterubot-dc/domain"
@@ -21,12 +24,12 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/jmoiron/sqlx"
 	"github.com/spf13/viper"
-	"log"
-)
 
-import (
-	"github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file" // side effect to add file support for db migrations
+	// side effect to add file support for db migrations
+	_ "github.com/golang-migrate/migrate/v4/source/file"
+
+	// side effect to load env file if any
+	_ "github.com/joho/godotenv/autoload"
 )
 
 type Closer interface {

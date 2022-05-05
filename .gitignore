@@ -2,3 +2,5 @@
 *.ogg
 .idea
 tmp
+.env
+*.exe
