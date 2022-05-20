@@ -11,6 +11,7 @@ type LockedUserRepository interface {
 	SetLock(guildID string, userID string)
 }
 
+//go:generate mockery --name=FileRepository --case=snake
 type FileRepository interface {
 	GetFullPath(fileName string) string
 	Open(fileName string) (*os.File, error)

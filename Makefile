@@ -14,7 +14,7 @@ build:
 ## Generates code
 .PHONY: generate
 generate:
-	go generate
+	go generate ./..
 
 ## Prepares local infrastructure
 .PHONY: local-infra
