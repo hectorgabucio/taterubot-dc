@@ -5,10 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/EdlinOrg/prominentcolor"
-	"github.com/hectorgabucio/taterubot-dc/domain"
-	"github.com/hectorgabucio/taterubot-dc/domain/discord"
-	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	"image"
 	"io"
 	"log"
@@ -17,6 +13,11 @@ import (
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/EdlinOrg/prominentcolor"
+	"github.com/hectorgabucio/taterubot-dc/domain"
+	"github.com/hectorgabucio/taterubot-dc/domain/discord"
+	"github.com/hectorgabucio/taterubot-dc/kit/event"
 )
 
 type AddMetadataOnAudioSent struct {
@@ -105,14 +106,13 @@ func (handler *AddMetadataOnAudioSent) prominentColor(fileName string) (int, err
 	}
 
 	for _, colour := range colours {
-		value, err := strconv.ParseInt(colour.AsString(), 16, 64)
-		if err != nil {
-			return 0, fmt.Errorf("error parsing color string to int, %w", err)
+		value, err2 := strconv.ParseInt(colour.AsString(), 16, 64)
+		if err2 != nil {
+			return 0, fmt.Errorf("error parsing color string to int, %w", err2)
 		}
 		if value > 0 && value <= math.MaxInt {
 			return int(value), nil
 		}
-		return 0, nil
 	}
 	return 0, errors.New("couldnt get any dominant color")
 }
