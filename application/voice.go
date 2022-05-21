@@ -5,15 +5,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
+	"log"
+	"os"
+
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/domain/ogg"
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	ffmpeg "github.com/u2takey/ffmpeg-go"
-	"io"
-	"log"
-	"os"
 )
 
 const RecordingCommandType command.Type = "command.recording"
@@ -187,7 +188,7 @@ func (usecase *VoiceRecorder) sendAudioFiles(guildID string, userID string, file
 }
 
 func (usecase *VoiceRecorder) sendAudioFile(guildID string, userID string, chID string, fileName string, username string, avatarURL string) {
-	mp3FullName := usecase.fsRepo.GetFullPath(fmt.Sprintf("%s", fileName) + ".mp3")
+	mp3FullName := usecase.fsRepo.GetFullPath(fileName + ".mp3")
 	file, err := usecase.fsRepo.Open(mp3FullName)
 	if err != nil {
 		log.Println(err)

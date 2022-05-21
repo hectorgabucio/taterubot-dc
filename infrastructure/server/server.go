@@ -3,12 +3,13 @@ package server
 import (
 	"context"
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/hectorgabucio/taterubot-dc/application"
-	"github.com/hectorgabucio/taterubot-dc/kit/command"
 	"log"
 	"os"
 	"os/signal"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/hectorgabucio/taterubot-dc/application"
+	"github.com/hectorgabucio/taterubot-dc/kit/command"
 )
 
 type Server struct {
@@ -119,7 +120,7 @@ func (server *Server) registerHandlers() {
 		}
 
 		if r.BeforeUpdate != nil {
-			if (r.SelfMute == true && r.BeforeUpdate.SelfMute == false) || (r.SelfMute == false && r.BeforeUpdate.SelfMute == true) {
+			if (r.SelfMute && !r.BeforeUpdate.SelfMute) || (!r.SelfMute && r.BeforeUpdate.SelfMute) {
 				return
 			}
 		}

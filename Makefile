@@ -4,7 +4,7 @@ all: check-style test
 ## Runs golangci-lint
 .PHONY: check-style
 check-style:
-	golangci-lint run -E ifshort -E revive -E prealloc -E wrapcheck
+	golangci-lint run -E ifshort -E revive -E prealloc -E wrapcheck ./...
 
 ## Builds project
 .PHONY: build
@@ -14,7 +14,7 @@ build:
 ## Generates code
 .PHONY: generate
 generate:
-	go generate ./..
+	go generate ./...
 
 ## Prepares local infrastructure
 .PHONY: local-infra
@@ -24,4 +24,4 @@ local-infra:
 ## Runs tests
 .PHONY: test
 test:
-	go test -race -v ./...
+	go test ./...
