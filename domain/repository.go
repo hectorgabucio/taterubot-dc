@@ -28,6 +28,7 @@ type VoiceData struct {
 	Duration  int
 }
 
+//go:generate mockery --name=VoiceDataRepository --case=snake --structname=VoiceDataRepositoryMock
 type VoiceDataRepository interface {
 	Save(data VoiceData) error
 	GetOnRange(guildID string, from time.Time, to time.Time) ([]VoiceData, error)
