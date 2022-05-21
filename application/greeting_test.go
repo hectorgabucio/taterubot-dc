@@ -2,17 +2,18 @@ package application
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
-	"github.com/hectorgabucio/taterubot-dc/domain/discord/discordmocks"
+	"github.com/hectorgabucio/taterubot-dc/domain/discord/mocks"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"testing"
 )
 
 func TestGreetingMessageCreator_send(t *testing.T) {
 	type fields struct {
-		discordClient *discordmocks.Client
+		discordClient *mocks.DiscordClient
 		localization  *localizations.Localizer
 		channelName   string
 	}
@@ -29,7 +30,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 	}{
 		{
 			name:          "when get guilds fail, return error",
-			fields:        fields{discordClient: &discordmocks.Client{}},
+			fields:        fields{discordClient: &mocks.DiscordClient{}},
 			args:          args{interactionToken: "token"},
 			expectedError: true,
 			on: func(fields *fields) {
@@ -41,7 +42,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 		},
 		{
 			name:          "when get guild channels fails, return error",
-			fields:        fields{discordClient: &discordmocks.Client{}},
+			fields:        fields{discordClient: &mocks.DiscordClient{}},
 			args:          args{interactionToken: "token"},
 			expectedError: true,
 			on: func(fields *fields) {
@@ -57,7 +58,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 		},
 		{
 			name:          "send greeting message on a new created voice channel",
-			fields:        fields{discordClient: &discordmocks.Client{}, channelName: "channelName", localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &mocks.DiscordClient{}, channelName: "channelName", localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token"},
 			expectedError: false,
 			on: func(fields *fields) {
@@ -82,7 +83,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 		},
 		{
 			name:          "send greeting message to multiple guilds",
-			fields:        fields{discordClient: &discordmocks.Client{}, channelName: "channelName", localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &mocks.DiscordClient{}, channelName: "channelName", localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token"},
 			expectedError: false,
 			on: func(fields *fields) {

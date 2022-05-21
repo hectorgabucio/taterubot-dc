@@ -9,8 +9,7 @@ const (
 	ChannelTypeGuildVoice ChannelType = 2
 )
 
-//go:generate mockery --case=snake --outpkg=discordmocks --output=discordmocks --name=Client
-
+//go:generate mockery --name=Client --case=snake --structname=DiscordClient
 type Client interface {
 	GetGuilds() ([]Guild, error)
 	GetGuildUsers(guildID string) ([]User, error)
