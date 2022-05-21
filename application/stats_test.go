@@ -6,7 +6,7 @@ import (
 
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
-	"github.com/hectorgabucio/taterubot-dc/domain/discord/mocks"
+	discordmocks "github.com/hectorgabucio/taterubot-dc/domain/discord/mocks"
 	domainmocks "github.com/hectorgabucio/taterubot-dc/domain/mocks"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/stretchr/testify/assert"
@@ -15,9 +15,9 @@ import (
 
 func TestStatsMessageCreator_send(t *testing.T) {
 	type fields struct {
-		discordClient *mocks.DiscordClient
+		discordClient *discordmocks.Client
 		localization  *localizations.Localizer
-		voiceDataRepo *domainmocks.VoiceDataRepositoryMock
+		voiceDataRepo *domainmocks.VoiceDataRepository
 	}
 
 	type args struct {
@@ -35,7 +35,7 @@ func TestStatsMessageCreator_send(t *testing.T) {
 		{
 			name:          "when get data on range fails, return error",
 			expectedError: true,
-			fields:        fields{discordClient: &mocks.DiscordClient{}, voiceDataRepo: &domainmocks.VoiceDataRepositoryMock{}},
+			fields:        fields{discordClient: &discordmocks.Client{}, voiceDataRepo: &domainmocks.VoiceDataRepository{}},
 			args:          args{interactionToken: "token", guildID: "1"},
 			on: func(fields *fields) {
 				fields.voiceDataRepo.On("GetOnRange", "1", mock.Anything, mock.Anything).Return(nil, errors.New("err range"))
@@ -47,7 +47,7 @@ func TestStatsMessageCreator_send(t *testing.T) {
 		{
 			name:          "when get data on range is empty, should send empty interaction",
 			expectedError: false,
-			fields:        fields{discordClient: &mocks.DiscordClient{}, voiceDataRepo: &domainmocks.VoiceDataRepositoryMock{}, localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &discordmocks.Client{}, voiceDataRepo: &domainmocks.VoiceDataRepository{}, localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token", guildID: "1"},
 			on: func(fields *fields) {
 				fields.voiceDataRepo.On("GetOnRange", "1", mock.Anything, mock.Anything).Return([]domain.VoiceData{}, nil)
@@ -62,7 +62,7 @@ func TestStatsMessageCreator_send(t *testing.T) {
 		{
 			name:          "when building message, it should fail",
 			expectedError: true,
-			fields:        fields{discordClient: &mocks.DiscordClient{}, voiceDataRepo: &domainmocks.VoiceDataRepositoryMock{}, localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &discordmocks.Client{}, voiceDataRepo: &domainmocks.VoiceDataRepository{}, localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token", guildID: "1"},
 			on: func(fields *fields) {
 				fields.voiceDataRepo.On("GetOnRange", "1", mock.Anything, mock.Anything).Return([]domain.VoiceData{{UserID: "1", Duration: 5}}, nil)
@@ -77,7 +77,7 @@ func TestStatsMessageCreator_send(t *testing.T) {
 		{
 			name:          "when building correct stats message, it should edit interaction complex",
 			expectedError: false,
-			fields:        fields{discordClient: &mocks.DiscordClient{}, voiceDataRepo: &domainmocks.VoiceDataRepositoryMock{}, localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &discordmocks.Client{}, voiceDataRepo: &domainmocks.VoiceDataRepository{}, localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token", guildID: "1"},
 			on: func(fields *fields) {
 				fields.voiceDataRepo.On("GetOnRange", "1", mock.Anything, mock.Anything).Return([]domain.VoiceData{{UserID: "1", Duration: 5}}, nil)

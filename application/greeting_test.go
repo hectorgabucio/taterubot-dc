@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
-	"github.com/hectorgabucio/taterubot-dc/domain/discord/mocks"
+	discordmocks "github.com/hectorgabucio/taterubot-dc/domain/discord/mocks"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -13,7 +13,7 @@ import (
 
 func TestGreetingMessageCreator_send(t *testing.T) {
 	type fields struct {
-		discordClient *mocks.DiscordClient
+		discordClient *discordmocks.Client
 		localization  *localizations.Localizer
 		channelName   string
 	}
@@ -30,7 +30,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 	}{
 		{
 			name:          "when get guilds fail, return error",
-			fields:        fields{discordClient: &mocks.DiscordClient{}},
+			fields:        fields{discordClient: &discordmocks.Client{}},
 			args:          args{interactionToken: "token"},
 			expectedError: true,
 			on: func(fields *fields) {
@@ -42,7 +42,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 		},
 		{
 			name:          "when get guild channels fails, return error",
-			fields:        fields{discordClient: &mocks.DiscordClient{}},
+			fields:        fields{discordClient: &discordmocks.Client{}},
 			args:          args{interactionToken: "token"},
 			expectedError: true,
 			on: func(fields *fields) {
@@ -58,7 +58,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 		},
 		{
 			name:          "send greeting message on a new created voice channel",
-			fields:        fields{discordClient: &mocks.DiscordClient{}, channelName: "channelName", localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &discordmocks.Client{}, channelName: "channelName", localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token"},
 			expectedError: false,
 			on: func(fields *fields) {
@@ -83,7 +83,7 @@ func TestGreetingMessageCreator_send(t *testing.T) {
 		},
 		{
 			name:          "send greeting message to multiple guilds",
-			fields:        fields{discordClient: &mocks.DiscordClient{}, channelName: "channelName", localization: localizations.New("en", "en")},
+			fields:        fields{discordClient: &discordmocks.Client{}, channelName: "channelName", localization: localizations.New("en", "en")},
 			args:          args{interactionToken: "token"},
 			expectedError: false,
 			on: func(fields *fields) {
