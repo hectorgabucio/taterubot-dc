@@ -4,7 +4,7 @@ all: check-style test
 ## Runs golangci-lint
 .PHONY: check-style
 check-style:
-	golangci-lint run -E ifshort -E revive -E prealloc -E wrapcheck
+	golangci-lint run -E ifshort -E revive -E prealloc -E wrapcheck ./...
 
 ## Builds project
 .PHONY: build
