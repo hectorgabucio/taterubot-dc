@@ -5,14 +5,14 @@ import (
 	"testing"
 
 	"github.com/hectorgabucio/taterubot-dc/domain"
-	"github.com/hectorgabucio/taterubot-dc/domain/mocks"
+	domainmocks "github.com/hectorgabucio/taterubot-dc/domain/mocks"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 	"github.com/stretchr/testify/mock"
 )
 
 func TestRemoveFilesWhenNotNeeded_Handle(t *testing.T) {
 	type fields struct {
-		fsRepo *mocks.FileRepository
+		fsRepo *domainmocks.FileRepository
 	}
 	type args struct {
 		ctx context.Context
@@ -34,7 +34,7 @@ func TestRemoveFilesWhenNotNeeded_Handle(t *testing.T) {
 		},
 		{
 			name:    "correct event should trigger 3 files removal",
-			fields:  fields{&mocks.FileRepository{}},
+			fields:  fields{&domainmocks.FileRepository{}},
 			args:    args{evt: domain.NewDoneProcessingFilesEvent("1")},
 			wantErr: false,
 			on: func(fields *fields) {
