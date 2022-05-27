@@ -2,10 +2,11 @@ package discordgo
 
 import (
 	"fmt"
-	"github.com/bwmarrin/discordgo"
-	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"io"
 	"log"
+
+	"github.com/bwmarrin/discordgo"
+	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 )
 
 type Client struct {
@@ -191,7 +192,7 @@ func (c *Client) SetEmbed(channelID string, messageID string, embed discord.Mess
 	return nil
 }
 
-func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (voice *discord.VoiceConnection, err error) {
+func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool, done chan bool, closeChannel chan bool) (voice *discord.VoiceConnection, err error) {
 	conn, err := c.session.ChannelVoiceJoin(guildID, channelID, mute, deaf)
 	if err != nil {
 		return nil, fmt.Errorf("err joining voice channel, %w", err)
@@ -199,14 +200,35 @@ func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (v
 
 	voiceRecv := make(chan *discord.Packet)
 	go func(voice chan *discordgo.Packet) {
-		for packet := range voice {
-			voiceRecv <- &discord.Packet{
-				SSRC:      packet.SSRC,
-				Sequence:  packet.Sequence,
-				Timestamp: packet.Timestamp,
-				Type:      packet.Type,
-				Opus:      packet.Opus,
-				PCM:       packet.PCM,
+		for {
+			if conn.Ready == false || conn.OpusRecv == nil {
+				log.Printf("Discordgo not to receive opus packets. %+v : %+v", conn.Ready, conn.OpusSend)
+				return
+			}
+
+			select {
+			case packet, ok := <-voice:
+				if !ok {
+					return
+				}
+				voiceRecv <- &discord.Packet{
+					SSRC:      packet.SSRC,
+					Sequence:  packet.Sequence,
+					Timestamp: packet.Timestamp,
+					Type:      packet.Type,
+					Opus:      packet.Opus,
+					PCM:       packet.PCM,
+				}
+			case <-done: // done reading
+				close(voiceRecv)
+				//close(voice)
+
+				err := conn.Disconnect()
+				if err != nil {
+					log.Printf("err disconnecting discord voice conn, %v", err)
+				}
+				closeChannel <- true
+				return
 			}
 		}
 	}(conn.OpusRecv)
@@ -216,22 +238,25 @@ func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool) (v
 }
 
 func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("recovered", r)
-		}
-	}()
-	discordGoConn, ok := voice.Internals.(*discordgo.VoiceConnection)
-	if !ok {
-		log.Fatalln("couldnt cast to discordgo conn")
-	}
-	close(voice.VoiceReceiver)
-	close(discordGoConn.OpusRecv)
-	err := discordGoConn.Disconnect()
-	if err != nil {
-		return fmt.Errorf("err disconnecting discord voice conn, %w", err)
-	}
 	return nil
+	/*
+		defer func() {
+			if r := recover(); r != nil {
+				log.Println("recovered", r)
+			}
+		}()
+		discordGoConn, ok := voice.Internals.(*discordgo.VoiceConnection)
+		if !ok {
+			log.Fatalln("couldnt cast to discordgo conn")
+		}
+		close(voice.VoiceReceiver)
+		close(discordGoConn.OpusRecv)
+		err := discordGoConn.Disconnect()
+		if err != nil {
+			return fmt.Errorf("err disconnecting discord voice conn, %w", err)
+		}
+		return nil
+	*/
 }
 
 func (c *Client) SendFileMessage(channelID string, name, contentType string, readable io.Reader) (discord.Message, error) {

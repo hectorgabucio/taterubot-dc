@@ -203,13 +203,13 @@ func (_m *Client) GetUser(userID string) (discord.User, error) {
 	return r0, r1
 }
 
-// JoinVoiceChannel provides a mock function with given fields: guildID, channelID, mute, deaf
-func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, deaf bool) (*discord.VoiceConnection, error) {
-	ret := _m.Called(guildID, channelID, mute, deaf)
+// JoinVoiceChannel provides a mock function with given fields: guildID, channelID, mute, deaf, done, choseChannel
+func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, deaf bool, done chan bool, choseChannel chan bool) (*discord.VoiceConnection, error) {
+	ret := _m.Called(guildID, channelID, mute, deaf, done, choseChannel)
 
 	var r0 *discord.VoiceConnection
-	if rf, ok := ret.Get(0).(func(string, string, bool, bool) *discord.VoiceConnection); ok {
-		r0 = rf(guildID, channelID, mute, deaf)
+	if rf, ok := ret.Get(0).(func(string, string, bool, bool, chan bool, chan bool) *discord.VoiceConnection); ok {
+		r0 = rf(guildID, channelID, mute, deaf, done, choseChannel)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*discord.VoiceConnection)
@@ -217,8 +217,8 @@ func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, bool, bool) error); ok {
-		r1 = rf(guildID, channelID, mute, deaf)
+	if rf, ok := ret.Get(1).(func(string, string, bool, bool, chan bool, chan bool) error); ok {
+		r1 = rf(guildID, channelID, mute, deaf, done, choseChannel)
 	} else {
 		r1 = ret.Error(1)
 	}

@@ -829,11 +829,17 @@ func (v *VoiceConnection) opusReceiver(udpConn *net.UDPConn, close <-chan struct
 		p.SSRC = binary.BigEndian.Uint32(recvbuf[8:12])
 		// decrypt opus data
 		copy(nonce[:], recvbuf[0:12])
-		p.Opus, _ = secretbox.Open(nil, recvbuf[12:rlen], &nonce, &v.op4.SecretKey)
-
+		algo, ok := secretbox.Open(nil, recvbuf[12:rlen], &nonce, &v.op4.SecretKey)
+		if !ok {
+			continue
+		}
+		p.Opus = algo
 		// extension bit set, and not a RTCP packet
 		if ((recvbuf[0] & 0x10) == 0x10) && ((recvbuf[1] & 0x80) == 0) {
 			// get extended header length
+			if len(p.Opus) == 0 {
+				fmt.Println("this is going to fail because opus 0", ok)
+			}
 			extlen := binary.BigEndian.Uint16(p.Opus[2:4])
 			// 4 bytes (ext header header) + 4*extlen (ext header data)
 			shift := int(4 + 4*extlen)

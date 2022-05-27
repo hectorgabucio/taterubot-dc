@@ -105,13 +105,14 @@ func (usecase *VoiceRecorder) handleVoiceRecording(userID string, nowChannelID s
 }
 
 func (usecase *VoiceRecorder) recordAndSend(userID string, guildID string, channelID string, username string, avatarURL string, done chan bool) error {
-	v, err := usecase.discord.JoinVoiceChannel(guildID, channelID, true, false)
+	closeVoiceConn := make(chan bool)
+	v, err := usecase.discord.JoinVoiceChannel(guildID, channelID, true, false, done, closeVoiceConn)
 	if err != nil {
 		return fmt.Errorf("err joining voice channel, %w", err)
 	}
 
 	go func() {
-		<-done
+		<-closeVoiceConn
 		err := usecase.discord.EndVoiceConnection(v)
 		if err != nil {
 			log.Println(err)
