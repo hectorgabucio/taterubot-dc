@@ -192,7 +192,7 @@ func (c *Client) SetEmbed(channelID string, messageID string, embed discord.Mess
 	return nil
 }
 
-func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool, done chan bool, closeChannel chan bool) (voice *discord.VoiceConnection, err error) {
+func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool, done chan bool) (voice *discord.VoiceConnection, err error) {
 	conn, err := c.session.ChannelVoiceJoin(guildID, channelID, mute, deaf)
 	if err != nil {
 		return nil, fmt.Errorf("err joining voice channel, %w", err)
@@ -227,7 +227,6 @@ func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool, do
 				if err != nil {
 					log.Printf("err disconnecting discord voice conn, %v", err)
 				}
-				closeChannel <- true
 				return
 			}
 		}
@@ -235,28 +234,6 @@ func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool, do
 	domainConn := discord.NewVoiceConnection(conn, voiceRecv)
 
 	return domainConn, nil
-}
-
-func (c *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
-	return nil
-	/*
-		defer func() {
-			if r := recover(); r != nil {
-				log.Println("recovered", r)
-			}
-		}()
-		discordGoConn, ok := voice.Internals.(*discordgo.VoiceConnection)
-		if !ok {
-			log.Fatalln("couldnt cast to discordgo conn")
-		}
-		close(voice.VoiceReceiver)
-		close(discordGoConn.OpusRecv)
-		err := discordGoConn.Disconnect()
-		if err != nil {
-			return fmt.Errorf("err disconnecting discord voice conn, %w", err)
-		}
-		return nil
-	*/
 }
 
 func (c *Client) SendFileMessage(channelID string, name, contentType string, readable io.Reader) (discord.Message, error) {

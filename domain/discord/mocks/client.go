@@ -64,20 +64,6 @@ func (_m *Client) EditInteractionComplex(token string, edit discord.ComplexInter
 	return r0
 }
 
-// EndVoiceConnection provides a mock function with given fields: voice
-func (_m *Client) EndVoiceConnection(voice *discord.VoiceConnection) error {
-	ret := _m.Called(voice)
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func(*discord.VoiceConnection) error); ok {
-		r0 = rf(voice)
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
 // GetBotUsername provides a mock function with given fields:
 func (_m *Client) GetBotUsername() string {
 	ret := _m.Called()
@@ -203,13 +189,13 @@ func (_m *Client) GetUser(userID string) (discord.User, error) {
 	return r0, r1
 }
 
-// JoinVoiceChannel provides a mock function with given fields: guildID, channelID, mute, deaf, done, choseChannel
-func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, deaf bool, done chan bool, choseChannel chan bool) (*discord.VoiceConnection, error) {
-	ret := _m.Called(guildID, channelID, mute, deaf, done, choseChannel)
+// JoinVoiceChannel provides a mock function with given fields: guildID, channelID, mute, deaf, done
+func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, deaf bool, done chan bool) (*discord.VoiceConnection, error) {
+	ret := _m.Called(guildID, channelID, mute, deaf, done)
 
 	var r0 *discord.VoiceConnection
-	if rf, ok := ret.Get(0).(func(string, string, bool, bool, chan bool, chan bool) *discord.VoiceConnection); ok {
-		r0 = rf(guildID, channelID, mute, deaf, done, choseChannel)
+	if rf, ok := ret.Get(0).(func(string, string, bool, bool, chan bool) *discord.VoiceConnection); ok {
+		r0 = rf(guildID, channelID, mute, deaf, done)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*discord.VoiceConnection)
@@ -217,8 +203,8 @@ func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, 
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, bool, bool, chan bool, chan bool) error); ok {
-		r1 = rf(guildID, channelID, mute, deaf, done, choseChannel)
+	if rf, ok := ret.Get(1).(func(string, string, bool, bool, chan bool) error); ok {
+		r1 = rf(guildID, channelID, mute, deaf, done)
 	} else {
 		r1 = ret.Error(1)
 	}

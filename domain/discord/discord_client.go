@@ -21,8 +21,7 @@ type Client interface {
 	SendTextMessage(channelID string, message string) error
 	SendFileMessage(channelID string, name, contentType string, readable io.Reader) (Message, error)
 	SetEmbed(channelID string, messageID string, embed MessageEmbed) error
-	JoinVoiceChannel(guildID, channelID string, mute, deaf bool, done chan bool, choseChannel chan bool) (voice *VoiceConnection, err error)
-	EndVoiceConnection(voice *VoiceConnection) error
+	JoinVoiceChannel(guildID, channelID string, mute, deaf bool, done chan bool) (voice *VoiceConnection, err error)
 	EditInteraction(token string, message string) error
 	EditInteractionComplex(token string, edit ComplexInteractionEdit) error
 }
