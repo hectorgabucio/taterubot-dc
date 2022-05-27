@@ -1,6 +1,5 @@
 package application
 
-// TODO create image infra service.
 import (
 	"context"
 	"errors"
@@ -18,19 +17,20 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/domain"
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
+	"github.com/hectorgabucio/taterubot-dc/localizations"
 )
 
 type AddMetadataOnAudioSent struct {
 	discord       discord.Client
-	durationText  string
+	localizer     *localizations.Localizer
 	fsRepo        domain.FileRepository
 	voiceDataRepo domain.VoiceDataRepository
 	decoder       domain.MP3Decoder
 	bus           event.Bus
 }
 
-func NewAddMetadataOnAudioSent(discord discord.Client, durationText string, fsRepo domain.FileRepository, voiceDataRepo domain.VoiceDataRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
-	return &AddMetadataOnAudioSent{discord: discord, durationText: durationText, fsRepo: fsRepo, voiceDataRepo: voiceDataRepo, decoder: decoder, bus: bus}
+func NewAddMetadataOnAudioSent(discord discord.Client, localizer *localizations.Localizer, fsRepo domain.FileRepository, voiceDataRepo domain.VoiceDataRepository, decoder domain.MP3Decoder, bus event.Bus) *AddMetadataOnAudioSent {
+	return &AddMetadataOnAudioSent{discord: discord, localizer: localizer, fsRepo: fsRepo, voiceDataRepo: voiceDataRepo, decoder: decoder, bus: bus}
 }
 
 func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Event) error {
@@ -49,12 +49,12 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 		Thumbnail: audioSentEvt.UserAvatarURL,
 		Fields: []*discord.MessageEmbedField{
 			{
-				Name:  handler.durationText,
+				Name:  handler.localizer.Get("texts.duration"),
 				Value: formatSeconds(seconds),
 			},
 			{
-				Name:  "Enlace de descarga",
-				Value: fmt.Sprintf("[Descargar :mobile_phone: ](https://cdn.discordapp.com/attachments/%s/%s/tmp_%s.mp3 'Descargar')", audioSentEvt.ChannelID, audioSentEvt.AttachmentId, audioSentEvt.FileName),
+				Name:  handler.localizer.Get("texts.download_link_title"),
+				Value: fmt.Sprintf("[:floppy_disk: MP3](https://cdn.discordapp.com/attachments/%s/%s/tmp_%s.mp3 'MP3')", audioSentEvt.ChannelID, audioSentEvt.AttachmentId, audioSentEvt.FileName),
 			},
 		},
 	}

@@ -118,7 +118,7 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	greeting := application.NewGreetingMessageCreator(discordClient, l, cfg.ChannelName)
 	stats := application.NewStatsMessageCreator(discordClient, l, voiceDataRepo)
 	voice := application.NewVoiceRecorder(discordClient, cfg.ChannelName, lockedUserRepo, eventBus, fsRepo, oggWriter)
-	embedAudioData := application.NewAddMetadataOnAudioSent(discordClient, l.GetWithLocale(cfg.Language, "texts.duration"), fsRepo, voiceDataRepo, decoder, eventBus)
+	embedAudioData := application.NewAddMetadataOnAudioSent(discordClient, l, fsRepo, voiceDataRepo, decoder, eventBus)
 	removeFiles := application.NewRemoveFilesWhenNotNeeded(fsRepo)
 
 	// EVENT SUBSCRIPTIONS

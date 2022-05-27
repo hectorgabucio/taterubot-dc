@@ -1,6 +1,7 @@
 {
   "hello": ">>> :wave: Hola! Soy **{{.botName}}**. Soy un bot capaz de grabar lo que dices y transformarlo en mensajes de voz.\\n:flag_es: Estoy configurado para responderte en castellano.\\n:microphone2: Para empezar a grabar, entra en el canal **{{.voiceChannel}}**, espera a que Discord muestre :green_circle: *Voz conectada* y empieza a hablarme.\\n:sound: Cuando salgas del mismo, mandaré el mensaje de voz.\\n\\nHecho con :heart: por Héctor <https://github.com/hectorgabucio/taterubot-dc> y probado por Aranchi y Raulio.",
   "duration": "Duración",
+  "download_link_title": "Enlace de descarga",
   "stats": ">>> :chart_with_upwards_trend: **Estadísticas del mes**: \\n\\n:earth_africa: Estadísticas generales:\\n- Un total de {{.globalDuration}} segundos enviados como audio\\n- {{.globalAmount}} archivos de audio grabados\\n- Duración media de {{.globalMedianDuration}} segundos",
   "stats-empty": ">>> :tired_face: Empieza a mandar mensajes de voz para tener estadísticas!",
   "achievement": ":trophy: Logro :trophy: ",

@@ -4,10 +4,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/hectorgabucio/taterubot-dc/kit/event"
-	"github.com/streadway/amqp"
 	"log"
 	"time"
+
+	"github.com/hectorgabucio/taterubot-dc/kit/event"
+	"github.com/streadway/amqp"
 )
 
 // EventBus is an in-memory implementation of the event.Bus.
@@ -37,7 +38,6 @@ func NewEventBus(connectionURL string) (*EventBus, error) {
 
 // Publish implements the event.Bus interface.
 func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
-	// TODO if some event fails, try to publish rest of events instead of returning
 	for i := range events {
 		buf, err := encode(events[i])
 		if err != nil {
