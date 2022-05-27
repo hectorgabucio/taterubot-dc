@@ -64,6 +64,29 @@ func (_m *Client) EditInteractionComplex(token string, edit discord.ComplexInter
 	return r0
 }
 
+// EstablishVoiceConnection provides a mock function with given fields: guildID, channelID, mute, deaf, done
+func (_m *Client) EstablishVoiceConnection(guildID string, channelID string, mute bool, deaf bool, done chan bool) (*discord.VoiceConnection, error) {
+	ret := _m.Called(guildID, channelID, mute, deaf, done)
+
+	var r0 *discord.VoiceConnection
+	if rf, ok := ret.Get(0).(func(string, string, bool, bool, chan bool) *discord.VoiceConnection); ok {
+		r0 = rf(guildID, channelID, mute, deaf, done)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*discord.VoiceConnection)
+		}
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(string, string, bool, bool, chan bool) error); ok {
+		r1 = rf(guildID, channelID, mute, deaf, done)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetBotUsername provides a mock function with given fields:
 func (_m *Client) GetBotUsername() string {
 	ret := _m.Called()
@@ -182,29 +205,6 @@ func (_m *Client) GetUser(userID string) (discord.User, error) {
 	var r1 error
 	if rf, ok := ret.Get(1).(func(string) error); ok {
 		r1 = rf(userID)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// JoinVoiceChannel provides a mock function with given fields: guildID, channelID, mute, deaf, done
-func (_m *Client) JoinVoiceChannel(guildID string, channelID string, mute bool, deaf bool, done chan bool) (*discord.VoiceConnection, error) {
-	ret := _m.Called(guildID, channelID, mute, deaf, done)
-
-	var r0 *discord.VoiceConnection
-	if rf, ok := ret.Get(0).(func(string, string, bool, bool, chan bool) *discord.VoiceConnection); ok {
-		r0 = rf(guildID, channelID, mute, deaf, done)
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*discord.VoiceConnection)
-		}
-	}
-
-	var r1 error
-	if rf, ok := ret.Get(1).(func(string, string, bool, bool, chan bool) error); ok {
-		r1 = rf(guildID, channelID, mute, deaf, done)
 	} else {
 		r1 = ret.Error(1)
 	}

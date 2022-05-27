@@ -192,7 +192,7 @@ func (c *Client) SetEmbed(channelID string, messageID string, embed discord.Mess
 	return nil
 }
 
-func (c *Client) JoinVoiceChannel(guildID, channelID string, mute, deaf bool, done chan bool) (voice *discord.VoiceConnection, err error) {
+func (c *Client) EstablishVoiceConnection(guildID, channelID string, mute, deaf bool, done chan bool) (voice *discord.VoiceConnection, err error) {
 	conn, err := c.session.ChannelVoiceJoin(guildID, channelID, mute, deaf)
 	if err != nil {
 		return nil, fmt.Errorf("err joining voice channel, %w", err)
