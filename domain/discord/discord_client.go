@@ -51,8 +51,9 @@ type Channel struct {
 }
 
 type Message struct {
-	ID        string
-	ChannelID string
+	ID           string
+	ChannelID    string
+	AttachmentId string
 }
 
 type MessageEmbed struct {

@@ -52,6 +52,10 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 				Name:  handler.durationText,
 				Value: formatSeconds(seconds),
 			},
+			{
+				Name:  "Enlace de descarga",
+				Value: fmt.Sprintf("[Descargar :mobile_phone: ](https://cdn.discordapp.com/attachments/%s/%s/tmp_%s.mp3 'Descargar')", audioSentEvt.ChannelID, audioSentEvt.AttachmentId, audioSentEvt.FileName),
+			},
 		},
 	}
 

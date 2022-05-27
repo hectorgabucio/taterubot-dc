@@ -273,7 +273,8 @@ func (c *Client) SendFileMessage(channelID string, name, contentType string, rea
 		return discord.Message{}, fmt.Errorf("err sending complex message, %w", err)
 	}
 	return discord.Message{
-		ID:        sendComplex.ID,
-		ChannelID: sendComplex.ChannelID,
+		ID:           sendComplex.ID,
+		ChannelID:    sendComplex.ChannelID,
+		AttachmentId: sendComplex.Attachments[0].ID,
 	}, nil
 }
