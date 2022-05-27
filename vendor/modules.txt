@@ -54,7 +54,7 @@ github.com/aws/aws-sdk-go/service/sso
 github.com/aws/aws-sdk-go/service/sso/ssoiface
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
-# github.com/bwmarrin/discordgo v0.24.0
+# github.com/bwmarrin/discordgo v0.25.1-0.20220523182309-414e505c5647
 ## explicit; go 1.13
 github.com/bwmarrin/discordgo
 # github.com/davecgh/go-spew v1.1.1
