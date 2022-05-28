@@ -8,6 +8,14 @@
 
 `Taterubot` is a Discord bot that allows recording voice messages and send them on your channel. 
 
+
+![Language](https://img.shields.io/github/languages/top/hectorgabucio/taterubot-dc?style=for-the-badge)
+![Build status](https://img.shields.io/github/workflow/status/hectorgabucio/taterubot-dc/Continuous%20integration?logo=github&style=for-the-badge)
+[![License](https://img.shields.io/badge/license-MIT-green?logo=readthedocs&style=for-the-badge)](./LICENSE.md)
+
+## Showcase
+WIP
+
 ## Requirements
 - Discord bot: create yours [here](https://discord.com/developers/applications).
 - [ffmepg](https://ffmpeg.org/) installed in the host machine. It is needed to convert and manipulate audio files.
@@ -22,10 +30,20 @@
 - Run *make local-infra*
 - Run *go run main.go*
 
-## Badges
-![Language](https://img.shields.io/github/languages/top/hectorgabucio/taterubot-dc?style=for-the-badge)
-![Build status](https://img.shields.io/github/workflow/status/hectorgabucio/taterubot-dc/Continuous%20integration?logo=github&style=for-the-badge)
-[![License](https://img.shields.io/badge/license-MIT-green?logo=readthedocs&style=for-the-badge)](./LICENSE.md)
+## Configuration settings (advanced setup)
+You can modify the config.json file and adapt it to your needs.
+- CHANNEL_NAME: Name of the voice channel where you want your audios to get recorded.
+- BASE_PATH: Base path where the audio files are stored temporarily. 
+- CLOUDAMQP_URL: Url that points to your AMQP broker.
+- DATABASE_URL: Url that points to your Postgres DB.
+
+## Guide: Deploy it in heroku for free
+1. Create a worker dyno in heroku.
+2. Add [CloudAMPQ addon](https://elements.heroku.com/addons/cloudamqp)
+3. Add [Heroku postgres](https://www.heroku.com/postgres)
+4. Set correct config vars for the bot token, AMPQ, postgres...
+5. Add ffmepg buildpack. [howto](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest)
+6. Deploy your code.
 ## Known bugs and limitations
 - Sometimes race condition if you try to record a very short audio.
 - Cant really scale horizontally; There is an internal state using channels to manage the recording, cant handle the start and end of recording in different instances.
