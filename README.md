@@ -6,7 +6,7 @@
 
 ---
 
-`Taterubot` is a Discord bot that allows recording voice messages and send them on your channel. 
+`Taterubot` is a Discord bot that allows recording voice messages and sending them on your server. 
 
 
 ![Language](https://img.shields.io/github/languages/top/hectorgabucio/taterubot-dc?style=for-the-badge)
@@ -23,9 +23,9 @@
 4. The bot will upload your voice message on the general channel.
 
 ## Requirements
-- Discord bot: create yours [here](https://discord.com/developers/applications).
+- Discord application bot: create yours [here](https://discord.com/developers/applications).
 - [ffmepg](https://ffmpeg.org/) installed in the host machine. It is needed to convert and manipulate audio files.
-- Docker and docker-compose (if running locally)
+- Docker and docker-compose (only needed if running locally)
 
 ## Run `Taterubot` on your own machine (minimal setup)
 
@@ -51,7 +51,6 @@ You can modify the config.json file and adapt it to your needs.
 5. Add ffmepg buildpack. [howto](https://github.com/jonathanong/heroku-buildpack-ffmpeg-latest)
 6. Deploy your code.
 ## Known bugs and limitations
-- Sometimes race condition if you try to record a very short audio.
 - Cant really scale horizontally; There is an internal state using channels to manage the recording, cant handle the start and end of recording in different instances.
 - Not meant for unstable connections: if you are outside with the phone and trying to record an audio and you have low signal, you most likely will lose that audio.
 
