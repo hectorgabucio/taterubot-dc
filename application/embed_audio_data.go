@@ -54,7 +54,7 @@ func (handler *AddMetadataOnAudioSent) Handle(ctx context.Context, evt event.Eve
 			},
 			{
 				Name:  handler.localizer.Get("texts.download_link_title"),
-				Value: fmt.Sprintf("[:floppy_disk: MP3](https://cdn.discordapp.com/attachments/%s/%s/tmp_%s.mp3 'MP3')", audioSentEvt.ChannelID, audioSentEvt.AttachmentId, audioSentEvt.FileName),
+				Value: fmt.Sprintf("[:floppy_disk: MP3](https://cdn.discordapp.com/attachments/%s/%s/tmp_%s.mp3 'MP3')", audioSentEvt.ChannelID, audioSentEvt.AttachmentID, audioSentEvt.FileName),
 			},
 		},
 	}

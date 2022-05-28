@@ -203,7 +203,7 @@ func (usecase *VoiceRecorder) sendAudioFile(guildID string, userID string, chID 
 	}
 
 	events := []event.Event{
-		domain.NewAudioSentEvent(messageSent.ID, userID, guildID, messageSent.ChannelID, username, avatarURL, mp3FullName, fileName, messageSent.AttachmentId),
+		domain.NewAudioSentEvent(messageSent.ID, userID, guildID, messageSent.ChannelID, username, avatarURL, mp3FullName, fileName, messageSent.AttachmentID),
 	}
 	go func() {
 		err := usecase.eventBus.Publish(context.Background(), events)

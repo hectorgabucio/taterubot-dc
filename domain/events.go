@@ -13,10 +13,10 @@ type AudioSentEvent struct {
 	UserAvatarURL string
 	Mp3Fullname   string
 	FileName      string
-	AttachmentId  string
+	AttachmentID  string
 }
 
-func NewAudioSentEvent(id string, userID string, guildID string, channelID string, username string, userAvatarURL string, mp3Fullname string, fileName string, attachmentId string) AudioSentEvent {
+func NewAudioSentEvent(id string, userID string, guildID string, channelID string, username string, userAvatarURL string, mp3Fullname string, fileName string, attachmentID string) AudioSentEvent {
 	return AudioSentEvent{
 		BaseEvent:     event.NewBaseEvent(id),
 		UserID:        userID,
@@ -26,7 +26,7 @@ func NewAudioSentEvent(id string, userID string, guildID string, channelID strin
 		UserAvatarURL: userAvatarURL,
 		Mp3Fullname:   mp3Fullname,
 		FileName:      fileName,
-		AttachmentId:  attachmentId,
+		AttachmentID:  attachmentID,
 	}
 }
 

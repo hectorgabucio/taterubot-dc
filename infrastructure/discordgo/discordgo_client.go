@@ -201,7 +201,7 @@ func (c *Client) EstablishVoiceConnection(guildID, channelID string, mute, deaf 
 	voiceRecv := make(chan *discord.Packet)
 	go func(voice chan *discordgo.Packet) {
 		for {
-			if conn.Ready == false || conn.OpusRecv == nil {
+			if !conn.Ready || conn.OpusRecv == nil {
 				log.Printf("Discordgo not to receive opus packets. %+v : %+v", conn.Ready, conn.OpusSend)
 				return
 			}
@@ -252,6 +252,6 @@ func (c *Client) SendFileMessage(channelID string, name, contentType string, rea
 	return discord.Message{
 		ID:           sendComplex.ID,
 		ChannelID:    sendComplex.ChannelID,
-		AttachmentId: sendComplex.Attachments[0].ID,
+		AttachmentID: sendComplex.Attachments[0].ID,
 	}, nil
 }
