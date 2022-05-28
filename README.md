@@ -18,11 +18,8 @@ with all major IDE and has dozens of linters included.
 ## Badges
 
 ![Build Status](https://github.com/hectorgabucio/taterubot-dc/actions/workflows/ci.yml/badge.svg)
-
 [![License](https://img.shields.io/github/license/hectorgabucio/taterubot-dc)](/LICENSE)
-
-![CodeQL](https://github.com/hectorgabucio/taterubot-dc/actions/workflows/codeql-analysis.yml/badge.svg)
-
+[![CodeQL](https://github.com/hectorgabucio/taterubot-dc/actions/workflows/codeql-analysis.yml/badge.svg)
 
 
 ## Known bugs and limitations
