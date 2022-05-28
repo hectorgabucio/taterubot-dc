@@ -1,6 +1,6 @@
 <p align="center">
   <img alt="taterubot logo" src="assets/art.svg" height="300" />
-  <h3 align="center">Taterubot</h3>
+  <h1 align="center">Taterubot</h3>
   <p align="center">Record audio messages and share them with your friends without leaving Discord! Whatsapp style</p>
 </p>
 
