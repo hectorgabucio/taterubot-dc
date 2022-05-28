@@ -16,6 +16,12 @@
 ## Showcase
 ![showcase](assets/showcase.gif)
 
+## How to use it
+1. Enter on the chosen channel. The bot will enter automatically.
+2. Start speaking.
+3. When you are done, leave the channel.
+4. The bot will upload your voice message on the general channel.
+
 ## Requirements
 - Discord bot: create yours [here](https://discord.com/developers/applications).
 - [ffmepg](https://ffmpeg.org/) installed in the host machine. It is needed to convert and manipulate audio files.
