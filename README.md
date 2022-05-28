@@ -6,14 +6,21 @@
 
 ---
 
-`golangci-lint` is a fast Go linters runner. It runs linters in parallel, uses caching, supports `yaml` config, has integrations
-with all major IDE and has dozens of linters included.
+`Taterubot` is a Discord bot that allows recording voice messages and send them on your channel. 
 
-## Install `golangci-lint`
+## Requirements
+- Discord bot: create yours [here](https://discord.com/developers/applications).
+- [ffmepg](https://ffmpeg.org/) installed in the host machine. It is needed to convert and manipulate audio files.
+- Docker and docker-compose (if running locally)
 
-- [On my machine](https://golangci-lint.run/usage/install/#local-installation);
-- [On CI/CD systems](https://golangci-lint.run/usage/install/#ci-installation).
+## Run `Taterubot` on your own machine (minimal setup)
 
+- Rename .env.example to .env
+- Put your discord token on BOT_TOKEN env variable.
+- (Optionally) change LANGUAGE to **:gb:** or **:es:**
+- Run *go mod download*
+- Run *make local-infra*
+- Run *go run main.go*
 
 ## Badges
 ![Language](https://img.shields.io/github/languages/top/hectorgabucio/taterubot-dc?style=for-the-badge)
@@ -23,3 +30,6 @@ with all major IDE and has dozens of linters included.
 - Sometimes race condition if you try to record a very short audio.
 - Cant really scale horizontally; There is an internal state using channels to manage the recording, cant handle the start and end of recording in different instances.
 - Not meant for unstable connections: if you are outside with the phone and trying to record an audio and you have low signal, you most likely will lose that audio.
+
+## Thanks to
+WIP
