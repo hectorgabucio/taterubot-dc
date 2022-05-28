@@ -38,10 +38,16 @@ func (server *Server) installInteractions() {
 		{
 			Name:        "taterubot",
 			Description: "I will say hi!",
+			DescriptionLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "Te explicaré de qué va esto!",
+			},
 		},
 		{
 			Name:        "stats",
 			Description: "Let's see some cool stats about this discord server!",
+			DescriptionLocalizations: &map[discordgo.Locale]string{
+				discordgo.SpanishES: "Vamos a ver algunas estadísticas chulas de este servidor",
+			},
 		},
 	}
 	commandHandlers := map[string]func(s *discordgo.Session, i *discordgo.InteractionCreate){
