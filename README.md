@@ -14,7 +14,7 @@
 [![License](https://img.shields.io/badge/license-MIT-green?logo=readthedocs&style=for-the-badge)](./LICENSE.md)
 
 ## Showcase
-WIP
+![showcase](assets/showcase.gif)
 
 ## Requirements
 - Discord bot: create yours [here](https://discord.com/developers/applications).
