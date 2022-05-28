@@ -17,11 +17,8 @@ with all major IDE and has dozens of linters included.
 
 ## Badges
 
-![Build Status](https://github.com/hectorgabucio/taterubot-dc/actions/workflows/ci.yml/badge.svg)
-[![License](https://img.shields.io/badge/license-MIT-green)](./LICENSE.md)
-![CodeQL](https://github.com/hectorgabucio/taterubot-dc/actions/workflows/codeql-analysis.yml/badge.svg)
-
-
+![Build status](https://img.shields.io/github/workflow/status/hectorgabucio/taterubot-dc/Continuous%20integration?logo=github&style=for-the-badge)
+[![License](https://img.shields.io/badge/license-MIT-green?logo=readthedocs&style=for-the-badge)](./LICENSE.md)
 ## Known bugs and limitations
 - Sometimes race condition if you try to record a very short audio.
 - Cant really scale horizontally; There is an internal state using channels to manage the recording, cant handle the start and end of recording in different instances.
