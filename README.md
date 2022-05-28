@@ -16,7 +16,7 @@ with all major IDE and has dozens of linters included.
 
 
 ## Badges
-
+![Language](https://img.shields.io/github/languages/top/hectorgabucio/taterubot-dc?style=for-the-badge)
 ![Build status](https://img.shields.io/github/workflow/status/hectorgabucio/taterubot-dc/Continuous%20integration?logo=github&style=for-the-badge)
 [![License](https://img.shields.io/badge/license-MIT-green?logo=readthedocs&style=for-the-badge)](./LICENSE.md)
 ## Known bugs and limitations
