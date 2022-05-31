@@ -55,4 +55,4 @@ You can modify the config.json file and adapt it to your needs.
 - Not meant for unstable connections: if you are outside with the phone and trying to record an audio and you have low signal, you most likely will lose that audio.
 
 ## Thanks to
-WIP
+WIP 👷
