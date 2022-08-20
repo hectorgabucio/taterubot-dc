@@ -19,7 +19,7 @@ FROM debian:latest
 
 WORKDIR /
 
-RUN apt update && apt install ffmpeg -y
+RUN apt update && apt install ffmpeg ca-certificates -y
 
 COPY --from=build /taterubot /taterubot
 COPY --from=build /config.json /config.json
