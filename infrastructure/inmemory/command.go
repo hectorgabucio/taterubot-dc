@@ -3,6 +3,7 @@ package inmemory
 import (
 	"context"
 	"fmt"
+
 	"github.com/hectorgabucio/taterubot-dc/kit/command"
 )
 
@@ -37,6 +38,6 @@ func (b *CommandBus) Register(cmdType command.Type, handler command.Handler) {
 }
 
 // Close is a no-op in im-memory implementation
-func (b *CommandBus) Close() {
-
+func (b *CommandBus) Close() error {
+	return nil
 }

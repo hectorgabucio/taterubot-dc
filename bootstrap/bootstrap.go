@@ -18,7 +18,6 @@ import (
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/inmemory"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/localfs"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/pion"
-	"github.com/hectorgabucio/taterubot-dc/infrastructure/rabbitmq"
 	"github.com/hectorgabucio/taterubot-dc/infrastructure/server"
 	sqlrepo "github.com/hectorgabucio/taterubot-dc/infrastructure/sql"
 	"github.com/hectorgabucio/taterubot-dc/localizations"
@@ -96,14 +95,9 @@ func createServerAndDependencies() (context.Context, *server.Server, []Closer, e
 	}
 	s.Identify.Intents = discordgo.MakeIntent(discordgo.IntentsGuildVoiceStates)
 
-	eventBus, err := rabbitmq.NewEventBus(cfg.CloudAMQPUrl)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	commandBus, err := rabbitmq.NewCommandBus(cfg.CloudAMQPUrl)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	eventBus := inmemory.NewEventBus()
+	commandBus := inmemory.NewCommandBus()
+
 	lockedUserRepo := inmemory.NewLockedUserRepository()
 	fsRepo := localfs.NewRepository(cfg.BasePath)
 	decoder := mp3decoder.NewMP3Decoder()

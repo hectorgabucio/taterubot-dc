@@ -3,6 +3,7 @@ package inmemory
 import (
 	"context"
 	"fmt"
+
 	"github.com/hectorgabucio/taterubot-dc/kit/event"
 )
 
@@ -36,8 +37,8 @@ func (b *EventBus) Publish(ctx context.Context, events []event.Event) error {
 	return nil
 }
 
-func (b *EventBus) Close() {
-
+func (b *EventBus) Close() error {
+	return nil
 }
 
 // Subscribe implements the event.Bus interface.
