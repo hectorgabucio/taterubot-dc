@@ -147,7 +147,7 @@ func (server *Server) Run(ctx context.Context) error {
 	}
 	c := cron.New()
 
-	c.AddFunc("* * * * *", func() { server.session.ChannelMessageSend("673215160764334093", "test") })
+	c.AddFunc("* * * * *", func() { server.session.ChannelMessageSend("673215160764334093", "test testing") })
 
 	c.Start()
 
