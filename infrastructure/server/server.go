@@ -148,7 +148,7 @@ func (server *Server) Run(ctx context.Context) error {
 	c := cron.New()
 
 	c.AddFunc("0 10 1 * *", func() {
-		server.session.ChannelMessageSend("673215160764334093", "GENRE HAY QUE GUARDAR DINERO PA JAPONNN")
+		server.session.ChannelMessageSend("673215160764334093", "@everyone GENRE HAY QUE GUARDAR DINERO PA JAPONNN")
 	})
 
 	c.Start()
