@@ -5,7 +5,7 @@ go 1.18
 
 require (
 	github.com/EdlinOrg/prominentcolor v1.0.0
-	github.com/bwmarrin/discordgo v0.25.1-0.20220523182309-414e505c5647
+	github.com/bwmarrin/discordgo v0.26.1
 	github.com/faiface/beep v1.1.0
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
