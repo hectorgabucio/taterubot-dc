@@ -2,11 +2,12 @@ package pion
 
 import (
 	"fmt"
+	"io"
+	"log"
+
 	"github.com/hectorgabucio/taterubot-dc/domain/discord"
 	"github.com/pion/rtp"
 	"github.com/pion/webrtc/v3/pkg/media/oggwriter"
-	"io"
-	"log"
 )
 
 type Writer struct {

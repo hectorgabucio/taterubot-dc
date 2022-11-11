@@ -10,8 +10,8 @@ require (
 	github.com/golang-migrate/migrate/v4 v4.15.2
 	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
-	github.com/pion/rtp v1.7.9
-	github.com/pion/webrtc/v3 v3.1.27
+	github.com/pion/rtp v1.7.13
+	github.com/pion/webrtc/v3 v3.1.47
 	github.com/spf13/viper v1.14.0
 	github.com/streadway/amqp v1.0.0
 	github.com/stretchr/testify v1.8.1
@@ -49,8 +49,8 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/u2takey/go-utils v0.3.1 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
-	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e // indirect
-	golang.org/x/sys v0.0.0-20220908164124-27713097b956 // indirect
+	golang.org/x/crypto v0.0.0-20221010152910-d6f0a8c073c2 // indirect
+	golang.org/x/sys v0.0.0-20221010170243-090e33056c14 // indirect
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
