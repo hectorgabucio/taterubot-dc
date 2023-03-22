@@ -37,6 +37,7 @@ type Closer interface {
 
 func setupSQLConnection(databaseURL string) *sqlx.DB {
 	driverName := "postgres"
+	
 	db, err := sql.Open(driverName, databaseURL)
 	if err != nil {
 		log.Fatalln(err)
