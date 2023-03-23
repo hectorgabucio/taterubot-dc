@@ -69,8 +69,8 @@ func (c *Client) EditInteractionComplex(token string, edit discord.ComplexIntera
 		}
 	}
 	_, err := c.session.InteractionResponseEdit(&discordgo.Interaction{Token: token, AppID: c.session.State.User.ID}, &discordgo.WebhookEdit{
-		Content: &edit.Content,
-		Embeds:  &embeds,
+		Content: edit.Content,
+		Embeds:  embeds,
 	})
 	if err != nil {
 		return fmt.Errorf("discordgo.interaction.edit.complex: %w", err)
@@ -85,7 +85,7 @@ func NewClient(session *discordgo.Session) *Client {
 
 func (c *Client) EditInteraction(token string, message string) error {
 	_, err := c.session.InteractionResponseEdit(&discordgo.Interaction{Token: token, AppID: c.session.State.User.ID}, &discordgo.WebhookEdit{
-		Content: &message,
+		Content: message,
 	})
 	if err != nil {
 		return fmt.Errorf("discordgo.interaction.edit: %w", err)

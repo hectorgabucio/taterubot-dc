@@ -1729,28 +1729,6 @@ func (s *Session) ChannelMessageSendReply(channelID string, content string, refe
 	})
 }
 
-// ChannelMessageSendEmbedReply sends a message to the given channel with reference data and embedded data.
-// channelID : The ID of a Channel.
-// embed   : The embed data to send.
-// reference : The message reference to send.
-func (s *Session) ChannelMessageSendEmbedReply(channelID string, embed *MessageEmbed, reference *MessageReference) (*Message, error) {
-	return s.ChannelMessageSendEmbedsReply(channelID, []*MessageEmbed{embed}, reference)
-}
-
-// ChannelMessageSendEmbedsReply sends a message to the given channel with reference data and multiple embedded data.
-// channelID : The ID of a Channel.
-// embeds    : The embeds data to send.
-// reference : The message reference to send.
-func (s *Session) ChannelMessageSendEmbedsReply(channelID string, embeds []*MessageEmbed, reference *MessageReference) (*Message, error) {
-	if reference == nil {
-		return nil, fmt.Errorf("reply attempted with nil message reference")
-	}
-	return s.ChannelMessageSendComplex(channelID, &MessageSend{
-		Embeds:    embeds,
-		Reference: reference,
-	})
-}
-
 // ChannelMessageEdit edits an existing message, replacing it entirely with
 // the given content.
 // channelID  : The ID of a Channel
@@ -2862,8 +2840,6 @@ func (s *Session) ApplicationCommandPermissions(appID, guildID, cmdID string) (p
 // guildID     : The guild ID containing the application command
 // cmdID       : The command ID to edit the permissions of
 // permissions : An object containing a list of permissions for the application command
-//
-// NOTE: Requires OAuth2 token with applications.commands.permissions.update scope
 func (s *Session) ApplicationCommandPermissionsEdit(appID, guildID, cmdID string, permissions *ApplicationCommandPermissionsList) (err error) {
 	endpoint := EndpointApplicationCommandPermissions(appID, guildID, cmdID)
 
@@ -2875,8 +2851,6 @@ func (s *Session) ApplicationCommandPermissionsEdit(appID, guildID, cmdID string
 // appID       : The Application ID
 // guildID     : The guild ID to batch edit commands of
 // permissions : A list of permissions paired with a command ID, guild ID, and application ID per application command
-//
-// NOTE: This endpoint has been disabled with updates to command permissions (Permissions v2). Please use ApplicationCommandPermissionsEdit instead.
 func (s *Session) ApplicationCommandPermissionsBatchEdit(appID, guildID string, permissions []*GuildApplicationCommandPermissions) (err error) {
 	endpoint := EndpointApplicationCommandsGuildPermissions(appID, guildID)
 

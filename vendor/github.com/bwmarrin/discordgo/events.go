@@ -401,8 +401,3 @@ type InviteDelete struct {
 	GuildID   string `json:"guild_id"`
 	Code      string `json:"code"`
 }
-
-// ApplicationCommandPermissionsUpdate is the data for an ApplicationCommandPermissionsUpdate event
-type ApplicationCommandPermissionsUpdate struct {
-	*GuildApplicationCommandPermissions
-}
