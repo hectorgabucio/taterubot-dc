@@ -151,6 +151,10 @@ func (server *Server) Run(ctx context.Context) error {
 		server.session.ChannelMessageSend("673215160764334093", "@everyone GENRE HAY QUE GUARDAR DINERO PA JAPONNN")
 	})
 
+	c.AddFunc("0 10 6 5 *", func() {
+		server.session.ChannelMessageSend("673215160764334093", "@everyone GENRE OS RECUERDO ESTO Q OS VA A INTERESAR: El festival de Eurovisión 2023 se celebrará desde el 9 al 13 de mayo del 2023")
+	})
+
 	c.Start()
 
 	<-ctx.Done()
